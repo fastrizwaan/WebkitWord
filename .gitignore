@@ -1,0 +1,10 @@
+flatpak/.flatpak-builder
+flatpak/repo
+flatpak/build-dir
+.flatpak-builder
+flatpak/repo
+flatpak/*.flatpak
+
+.codegpt
+
+src/__pycache__
