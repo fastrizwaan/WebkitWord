@@ -1,3 +1,3 @@
-flatpak-builder --user --install --force-clean build-dir io.github.fastrizwaan.htmleditor.yaml
+flatpak-builder --user --install --force-clean build-dir io.github.fastrizwaan.WebkitWord.yaml
 
-flatpak run io.github.fastrizwaan.htmleditor
+flatpak run io.github.fastrizwaan.WebkitWord

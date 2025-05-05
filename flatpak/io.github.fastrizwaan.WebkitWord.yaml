@@ -47,10 +47,9 @@ modules:
     buildsystem: simple
     build-commands:
       - ./setup -i --prefix=/app 
-      - install -Dm755 src/wcterm.py    /app/bin/wcterm
 
     sources:
       - type: git
-        tag: 0.99.0
-        commit: 7ef5365dd6bc1358f57b18f4a51b5c582d48a67e
+        tag: v0.1
+        commit: d7bf4b17d5954fa47bfd37f1b2cb03eee2e65f21
         url: https://github.com/fastrizwaan/WebkitWord.git
