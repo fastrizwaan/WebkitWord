@@ -1839,6 +1839,13 @@ def on_change_case(self, win, case_type):
                     }
                 }).join('');
             }
+        """,
+        "smallcaps": """
+            function transformText(text) {
+                // We'll wrap the text in a span with font-variant set to small-caps
+                // This applies the CSS small-caps style to the text
+                return '<span style="font-variant: small-caps;">' + text + '</span>';
+            }
         """
     }
     
@@ -1865,8 +1872,13 @@ def on_change_case(self, win, case_type):
                 {transform_function}
                 const transformedText = transformText(selectedText);
                 
-                // Replace the selected text with the transformed text
-                document.execCommand('insertText', false, transformedText);
+                // For smallcaps which returns HTML, use insertHTML instead of insertText
+                if ('{case_type}' === 'smallcaps') {{
+                    document.execCommand('insertHTML', false, transformedText);
+                }} else {{
+                    // Replace the selected text with the transformed text
+                    document.execCommand('insertText', false, transformedText);
+                }}
                 
                 // Now try to restore the selection
                 try {{
@@ -1896,22 +1908,26 @@ def on_change_case(self, win, case_type):
                             
                             if (!foundStart) {{
                                 // Look for the start of the transformed text
-                                const startCheck = transformedText.substring(0, Math.min(20, transformedText.length));
+                                const startCheck = '{case_type}' === 'smallcaps' 
+                                    ? selectedText.substring(0, Math.min(20, selectedText.length))
+                                    : transformedText.substring(0, Math.min(20, transformedText.length));
                                 if (node.textContent.includes(startCheck)) {{
                                     startNode = node;
                                     startNodeOffset = node.textContent.indexOf(startCheck);
                                     foundStart = true;
                                     
                                     // If the entire transformed text fits in this node, we can also set the end
-                                    if (node.textContent.includes(transformedText)) {{
+                                    if (node.textContent.includes('{case_type}' === 'smallcaps' ? selectedText : transformedText)) {{
                                         endNode = node;
-                                        endNodeOffset = startNodeOffset + transformedText.length;
+                                        endNodeOffset = startNodeOffset + ('{case_type}' === 'smallcaps' ? selectedText.length : transformedText.length);
                                         break;
                                     }}
                                 }}
                             }} else if (foundStart) {{
                                 // Already found start, now look for the end
-                                const endCheck = transformedText.substring(Math.max(0, transformedText.length - 20));
+                                const endCheck = '{case_type}' === 'smallcaps'
+                                    ? selectedText.substring(Math.max(0, selectedText.length - 20))
+                                    : transformedText.substring(Math.max(0, transformedText.length - 20));
                                 if (node.textContent.includes(endCheck)) {{
                                     endNode = node;
                                     const endPos = node.textContent.indexOf(endCheck) + endCheck.length;
@@ -1921,8 +1937,25 @@ def on_change_case(self, win, case_type):
                             }}
                         }}
                         
-                        if (startNode && endNode) {{
-                            // Create and apply the new range
+                        // Special handling for small caps - find the span we inserted
+                        if ('{case_type}' === 'smallcaps') {{
+                            const smallCapsSpan = editor.querySelector('span[style*="font-variant: small-caps"]');
+                            if (smallCapsSpan) {{
+                                // Create a range that selects the entire span
+                                const newRange = document.createRange();
+                                newRange.selectNode(smallCapsSpan);
+                                selection.removeAllRanges();
+                                selection.addRange(newRange);
+                            }} else if (startNode && endNode) {{
+                                // Fallback to our normal selection logic
+                                const newRange = document.createRange();
+                                newRange.setStart(startNode, startNodeOffset);
+                                newRange.setEnd(endNode, endNodeOffset);
+                                selection.removeAllRanges();
+                                selection.addRange(newRange);
+                            }}
+                        }} else if (startNode && endNode) {{
+                            // Create and apply the new range for other transformations
                             const newRange = document.createRange();
                             newRange.setStart(startNode, startNodeOffset);
                             newRange.setEnd(endNode, endNodeOffset);
@@ -1966,11 +1999,12 @@ def on_change_case(self, win, case_type):
         "lower": "Applied lowercase",
         "upper": "Applied UPPERCASE",
         "title": "Applied Title Case",
-        "toggle": "Applied tOGGLE cASE"
+        "toggle": "Applied tOGGLE cASE",
+        "smallcaps": "Applied small caps"
     }
     
     win.statusbar.set_text(status_messages.get(case_type, "Changed text case"))
-    win.webview.grab_focus()    
+    win.webview.grab_focus()
     
 def on_select_all_clicked(self, win, *args):
     """Handle Ctrl+A shortcut for selecting all content"""

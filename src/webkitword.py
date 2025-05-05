@@ -3438,6 +3438,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         case_menu.append("UPPERCASE", "win.change-case::upper")
         case_menu.append("Capitalize Each Word", "win.change-case::title")
         case_menu.append("tOGGLE cASE", "win.change-case::toggle")
+        case_menu.append("SMALL CAPS", "win.change-case::smallcaps")
 
         # Set the menu model for the button
         case_menu_button.set_menu_model(case_menu)
