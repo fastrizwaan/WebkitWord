@@ -106,7 +106,7 @@ install_files() {
     done
 
     # Install .desktop file
-    install -Dm644 data/shortcut/io.github.fastrizwaan.WebkitWord.appdata.desktop "$INSTALL_PATH/share/applications/io.github.fastrizwaan.WebkitWord.desktop"
+    install -Dm644 data/shortcut/io.github.fastrizwaan.WebkitWord.desktop "$INSTALL_PATH/share/applications/io.github.fastrizwaan.WebkitWord.desktop"
 
     # Update system databases
     echo "Updating MIME, icon, and desktop caches..."
@@ -130,7 +130,7 @@ uninstall_files() {
     rm -f "$INSTALL_PATH/share/metainfo/io.github.fastrizwaan.WebkitWord.appdata.xml"
 
     # Remove app icon
-    rm -f "$INSTALL_PATH/share/icons/hicolor/32x32/apps/io.github.fastrizwaan.WebkitWord.svg"
+    rm -f "$INSTALL_PATH/share/icons/hicolor/scalable/apps/io.github.fastrizwaan.WebkitWord.svg"
 
     # Remove action icons
     rm -f "$INSTALL_PATH/share/icons/hicolor/scalable/actions/"*.svg
