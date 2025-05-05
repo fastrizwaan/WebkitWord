@@ -22,7 +22,11 @@
   </description>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
-  <developer_name>Mohammed Asif Ali Rizvan</developer_name>
+  <developer>
+    <name>Mohammed Asif Ali Rizvan</name>
+    <email>fastrizwaan@gmail.com</email>
+    <url>https://github.com/fastrizwaan</url>
+  </developer>
   <url type="homepage">https://github.com/fastrizwaan/webkitword</url>
   <url type="bugtracker">https://github.com/fastrizwaan/webkitword/issues</url>
   <url type="vcs-browser">https://github.com/fastrizwaan/webkitword</url>
@@ -41,10 +45,8 @@
   </keywords>
   <launchable type="desktop-id">io.github.fastrizwaan.webkitword.desktop</launchable>
   <screenshots>
-    <!-- Replace with actual screenshot URLs once available -->
     <screenshot type="default">
-      <image>https://github.com/fastrizwaan/webkitword/raw/main/screenshots/main-window.png</image>
-      <caption>Main editing window with formatting toolbar</caption>
+      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/webkitword.png</image>
     </screenshot>
   </screenshots>
   <releases>
@@ -84,7 +86,6 @@
     <content_attribute id="money-gambling">none</content_attribute>
   </content_rating>
   <requires>
-    <display_length compare="ge">small</display_length>
     <control>keyboard</control>
     <control>pointing</control>
   </requires>

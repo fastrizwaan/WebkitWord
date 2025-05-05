@@ -130,7 +130,7 @@ uninstall_files() {
     rm -f "$INSTALL_PATH/share/metainfo/io.github.fastrizwaan.WebkitWord.appdata.xml"
 
     # Remove app icon
-    rm -f "$INSTALL_PATH/share/icons/hicolor/scalable/apps/io.github.fastrizwaan.WebkitWord.svg"
+    rm -f "$INSTALL_PATH/share/icons/hicolor/32x32/apps/io.github.fastrizwaan.WebkitWord.svg"
 
     # Remove action icons
     rm -f "$INSTALL_PATH/share/icons/hicolor/scalable/actions/"*.svg
