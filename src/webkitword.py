@@ -400,18 +400,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Create window menu button on the right side
         self.add_window_menu_button(win)
             
-## Insert related code
 
-    def insert_link_js(self):
-        """JavaScript for insert link and related functionality"""
-        return """ """
-
-    # Python handler for insertion
-
-
-    def on_insert_link_clicked(self, win, btn):
-        """show a dialog with URL and Text """
-        return 
       
 ## /Insert related code
 
@@ -2434,23 +2423,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             print(f"Error during auto-save: {error.message}")
             win.statusbar.set_text(f"Auto-save failed: {error.message}")
 
-    def show_error_dialog(self, message):
+    def show_error_dialog(self, win, message):
         """Show error message dialog"""
-        if not self.windows:
-            print(f"Error: {message}")
-            return
-            
-        # Find the active window
-        active_window = None
-        for win in self.windows:
-            if win.is_active():
-                active_window = win
-                break
-                
-        # Fallback to first window if none is active
-        if not active_window:
-            active_window = self.windows[0]
-        
         dialog = Adw.Dialog.new()
         dialog.set_title("Error")
         dialog.set_content_width(350)
@@ -2483,7 +2457,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         content_box.append(button_box)
         
         dialog.set_child(content_box)
-        dialog.present(active_window)
+        dialog.present(win)
 
     # Show Caret in the window (for new and fresh start)
     def set_initial_focus(self, win):
@@ -5684,41 +5658,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             # No selection - show a message
             self.show_error_dialog(win, "Please select a date/time format")
 
-    def show_error_dialog(self, win, message):
-        """Show error message dialog"""
-        dialog = Adw.Dialog.new()
-        dialog.set_title("Error")
-        dialog.set_content_width(350)
-        
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
-        content_box.set_margin_top(24)
-        content_box.set_margin_bottom(24)
-        content_box.set_margin_start(24)
-        content_box.set_margin_end(24)
-        
-        error_icon = Gtk.Image.new_from_icon_name("dialog-error-symbolic")
-        error_icon.set_pixel_size(48)
-        error_icon.set_margin_bottom(12)
-        content_box.append(error_icon)
-        
-        message_label = Gtk.Label(label=message)
-        message_label.set_wrap(True)
-        message_label.set_max_width_chars(40)
-        content_box.append(message_label)
-        
-        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        button_box.set_halign(Gtk.Align.CENTER)
-        button_box.set_margin_top(12)
-        
-        ok_button = Gtk.Button(label="OK")
-        ok_button.add_css_class("suggested-action")
-        ok_button.connect("clicked", lambda btn: dialog.close())
-        button_box.append(ok_button)
-        
-        content_box.append(button_box)
-        
-        dialog.set_child(content_box)
-        dialog.present(win)
 
 ############################
 ########### ltr rtl direction
@@ -5897,7 +5836,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             {"id": "glitch", "name": "Glitch", "preview": "Glitch"},
         ]
         
-        # Generate CSS styles for previews
+        # Generate CSS styles for previews - FIXED VERSION TO AVOID GTK WARNINGS
         styles_css = """
         .wordart-shadow { 
             text-shadow: 4px 4px 8px rgba(0,0,0,0.5); 
@@ -5912,9 +5851,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         }
         .wordart-inset { 
             background-color: #666; 
-            color: transparent;
+            color: #aaa;
             text-shadow: 2px 2px 3px rgba(255,255,255,0.5);
-            -webkit-background-clip: text;
             font-weight: bold; 
             font-size: 18px; 
         }
@@ -5938,16 +5876,14 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             font-size: 18px; 
         }
         .wordart-gradient { 
-            background: linear-gradient(to right, #ff8a00, #e52e71, #2d00f7);
-            -webkit-background-clip: text;
-            color: transparent;
+            /* Use solid color for preview instead of gradient with background-clip */
+            color: #e52e71;
             font-weight: bold; 
             font-size: 18px; 
         }
         .wordart-fire { 
-            background: linear-gradient(0deg, #ff8c00, #ff0000);
-            -webkit-background-clip: text;
-            color: transparent;
+            /* Use solid color for preview instead of gradient with background-clip */
+            color: #ff5500;
             font-weight: bold; 
             font-size: 18px; 
         }
@@ -5959,9 +5895,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             font-size: 18px;
         }
         .wordart-metallic { 
-            background: linear-gradient(to bottom, #d5d5d5 0%, #919191 98%);
-            -webkit-background-clip: text;
-            color: transparent;
+            /* Use solid color for preview instead of gradient with background-clip */
+            color: #a0a0a0;
             text-shadow: 2px 2px 3px rgba(255,255,255,0.5);
             font-weight: bold; 
             font-size: 18px; 
@@ -6087,89 +6022,21 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Activate first style button by default
         if style_buttons:
-            style_buttons[0].set_active(True)
+            style_buttons[0].set_active(True)        
 
     def _on_wordart_dialog_response(self, win, dialog, text, style_id):
         """Handle the response from the Word Art dialog"""
-        if not text:
-            # Show error if no text provided
-            self.show_error_dialog(win, "Please enter text for the Word Art")
-            return
-        
-        if not style_id:
-            # Show error if no style selected
-            self.show_error_dialog(win, "Please select a Word Art style")
-            return
-        
         # Close the dialog
         dialog.close()
         
-        # Escape single quotes in the text to avoid JS errors
-        escaped_text = text.replace("'", "\\'")
-        
-        # Apply the Word Art style to the text
-        js_code = f"""
-        (function() {{
-            // Create the Word Art HTML
-            let wordArtHtml = '';
-            
-            switch ('{style_id}') {{
-                case 'shadow':
-                    wordArtHtml = '<span style="display: inline-block; text-shadow: 4px 4px 8px rgba(0,0,0,0.5); font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'outline':
-                    wordArtHtml = '<span style="display: inline-block; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'inset':
-                    wordArtHtml = '<span style="display: inline-block; background-color: #666; color: transparent; text-shadow: 2px 2px 3px rgba(255,255,255,0.5); background-clip: text; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'neon':
-                    wordArtHtml = '<span style="display: inline-block; color: #fff; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #0073e6, 0 0 20px #0073e6; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'retro':
-                    wordArtHtml = '<span style="display: inline-block; color: #fc0; text-shadow: 2px 2px 0px #f00; font-family: monospace; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'emboss':
-                    wordArtHtml = '<span style="display: inline-block; color: #555; text-shadow: -1px -1px 1px #000, 1px 1px 1px #fff; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'gradient':
-                    wordArtHtml = '<span style="display: inline-block; background: linear-gradient(to right, #ff8a00, #e52e71, #2d00f7); background-clip: text; color: transparent; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'fire':
-                    wordArtHtml = '<span style="display: inline-block; background: linear-gradient(0deg, #ff8c00, #ff0000); background-clip: text; color: transparent; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'comic':
-                    wordArtHtml = '<span style="display: inline-block; color: #fd0; text-shadow: -3px 0 4px #000; font-family: fantasy, \\'Comic Sans MS\\', cursive; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'metallic':
-                    wordArtHtml = '<span style="display: inline-block; background: linear-gradient(to bottom, #d5d5d5 0%, #919191 98%); background-clip: text; color: transparent; text-shadow: 2px 2px 3px rgba(255,255,255,0.5); font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case '3d':
-                    wordArtHtml = '<span style="display: inline-block; color: #5e17eb; text-shadow: 0px 1px 0px #c5bce4, 0px 2px 0px #a197c0, 0px 3px 0px #7c738e, 0px 4px 0px #58505f, 0px 5px 10px rgba(0, 0, 0, 0.6); font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                case 'glitch':
-                    wordArtHtml = '<span style="display: inline-block; color: #00fffc; text-shadow: 2px 0 #ff00c1, -2px 0 #fffc00; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-                    break;
-                default:
-                    wordArtHtml = '<span style="display: inline-block; font-weight: bold; font-size: 24px; padding: 10px 0;">{escaped_text}</span>';
-            }}
-            
-            // Insert the Word Art HTML
-            document.execCommand('insertHTML', false, wordArtHtml);
-            
-            // Notify that content changed
-            try {{
-                window.webkit.messageHandlers.contentChanged.postMessage('changed');
-            }} catch(e) {{
-                console.log("Could not notify about content change:", e);
-            }}
-            
-            return true;
-        }})();
-        """
-        
-        self.execute_js(win, js_code)
-        win.statusbar.set_text(f"Word Art inserted with {style_id} style")
+        # Get selected text first
+        win.webview.evaluate_javascript(
+            "window.getSelection().toString();",
+            -1, None, None, None,
+            lambda webview, result, data: self._apply_wordart_with_selection(
+                win, webview, result, text, style_id),
+            None
+        )
 
     def wordart_js(self):
         """JavaScript for Word Art functionality"""
@@ -6201,7 +6068,392 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             return wordArtHtml;
         }
         """
+#################
 
+
+    def _apply_wordart_with_selection(self, win, webview, result, input_text, style_id):
+        """Apply Word Art using selection if available"""
+        try:
+            js_result = webview.evaluate_javascript_finish(result)
+            selected_text = ""
+            
+            if js_result:
+                # Get the selected text from the result
+                if hasattr(js_result, 'get_js_value'):
+                    selected_text = js_result.get_js_value().to_string()
+                elif hasattr(js_result, 'to_string'):
+                    selected_text = js_result.to_string()
+                else:
+                    selected_text = str(js_result)
+                
+                # Remove any surrounding quotes if present
+                if selected_text.startswith('"') and selected_text.endswith('"'):
+                    selected_text = selected_text[1:-1]
+            
+            # Use selected text if available, otherwise use input text
+            final_text = selected_text if selected_text and selected_text.strip() else input_text
+            
+            if not final_text or not final_text.strip():
+                # Show error if no text provided or selected
+                self.show_error_dialog(win, "Please enter text or select existing text for the Word Art")
+                return
+            
+            # Escape special characters in the text to avoid JS errors
+            import json
+            escaped_text = json.dumps(final_text)[1:-1]
+            
+            # Apply the Word Art style with a direct approach
+            js_code = f"""
+            (function() {{
+                // Get current selection
+                const selection = window.getSelection();
+                const hasSelection = selection.rangeCount > 0 && selection.toString().trim() !== '';
+                
+                // Create the appropriate HTML based on the selected style
+                let wordArtHtml = "";
+                
+                switch ('{style_id}') {{
+                    case 'shadow':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; text-shadow: 4px 4px 8px rgba(0,0,0,0.5); font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        break;
+                    case 'outline':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        break;
+                    case 'inset':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; background-color: #666; color: transparent; text-shadow: 2px 2px 3px rgba(255,255,255,0.5); -webkit-background-clip: text; background-clip: text; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        break;
+                    case 'neon':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; color: #fff; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #0073e6, 0 0 20px #0073e6; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        break;
+                    case 'retro':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; color: #fc0; text-shadow: 2px 2px 0px #f00; font-family: monospace; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        break;
+                    case 'emboss':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; color: #555; text-shadow: -1px -1px 1px #000, 1px 1px 1px #fff; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        break;
+                    case 'gradient':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; position: relative; font-weight: bold; font-size: 24px;"><span style="position: absolute; top: 0; left: 0; background: linear-gradient(to right, #ff8a00, #e52e71, #2d00f7); -webkit-background-clip: text; background-clip: text; color: transparent; pointer-events: none;">{escaped_text}</span><span style="color: transparent; position: relative; z-index: 1;">{escaped_text}</span></span></span>';
+                        break;
+                    case 'fire':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; position: relative; font-weight: bold; font-size: 24px;"><span style="position: absolute; top: 0; left: 0; background: linear-gradient(0deg, #ff8c00, #ff0000); -webkit-background-clip: text; background-clip: text; color: transparent; pointer-events: none;">{escaped_text}</span><span style="color: transparent; position: relative; z-index: 1;">{escaped_text}</span></span></span>';
+                        break;
+                    case 'comic':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; color: #fd0; text-shadow: -3px 0 4px #000; font-family: fantasy, \\'Comic Sans MS\\', cursive; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        break;
+                    case 'metallic':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; position: relative; font-weight: bold; font-size: 24px;"><span style="position: absolute; top: 0; left: 0; background: linear-gradient(to bottom, #d5d5d5 0%, #919191 98%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 2px 2px 3px rgba(255,255,255,0.5); pointer-events: none;">{escaped_text}</span><span style="color: transparent; position: relative; z-index: 1;">{escaped_text}</span></span></span>';
+                        break;
+                    case '3d':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; color: #5e17eb; text-shadow: 0px 1px 0px #c5bce4, 0px 2px 0px #a197c0, 0px 3px 0px #7c738e, 0px 4px 0px #58505f, 0px 5px 10px rgba(0, 0, 0, 0.6); font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        break;
+                    case 'glitch':
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; color: #00fffc; text-shadow: 2px 0 #ff00c1, -2px 0 #fffc00; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        break;
+                    default:
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                }}
+                
+                // If there's a selection, replace it
+                if (hasSelection) {{
+                    // First delete the selected content
+                    document.execCommand('delete');
+                    
+                    // Then insert the word art
+                    document.execCommand('insertHTML', false, wordArtHtml);
+                }} else {{
+                    // Just insert the word art at cursor position
+                    document.execCommand('insertHTML', false, wordArtHtml);
+                }}
+                
+                // Add a small script to enhance the editor behavior
+                setTimeout(() => {{
+                    // Mark all wordart containers as initialized to prevent duplicate event listeners
+                    document.querySelectorAll('.wordart-container:not([data-initialized])').forEach(container => {{
+                        container.setAttribute('data-initialized', 'true');
+                    }});
+                }}, 50);
+                
+                // Notify that content changed
+                try {{
+                    window.webkit.messageHandlers.contentChanged.postMessage('changed');
+                }} catch(e) {{
+                    console.log("Could not notify about content change:", e);
+                }}
+                
+                return true;
+            }})();
+            """
+            
+            # Execute the JavaScript
+            self.execute_js(win, js_code)
+            
+            # Update status bar
+            if selected_text and selected_text.strip():
+                win.statusbar.set_text(f"Word Art {style_id} style applied to selected text")
+            else:
+                win.statusbar.set_text(f"Word Art inserted with {style_id} style")
+                
+        except Exception as e:
+            print(f"Error applying Word Art: {e}")
+            win.statusbar.set_text(f"Error applying Word Art: {e}")        
+
+    def on_font_size_change_shortcut(self, win, points_change):
+        """Handle font size change via keyboard shortcuts (Ctrl+[ / Ctrl+] or Ctrl+Shift+< / Ctrl+Shift+>)
+        
+        Args:
+            win: The window object
+            points_change: Integer representing the size change in points
+        """
+        # First, get the current font size from the dropdown
+        dropdown = win.font_size_dropdown
+        selected_item = dropdown.get_selected_item()
+        current_size_pt = selected_item.get_string()
+        
+        # Convert to integer
+        try:
+            current_size = int(current_size_pt)
+        except ValueError:
+            current_size = 12  # Default if conversion fails
+        
+        # Get all available sizes from the font size dropdown
+        font_sizes = []
+        model = dropdown.get_model()
+        for i in range(model.get_n_items()):
+            font_sizes.append(int(model.get_string(i)))
+        
+        # Find the next size in the sequence based on direction
+        if points_change > 0:  # Increasing
+            new_size = None
+            for size in sorted(font_sizes):
+                if size > current_size:
+                    new_size = size
+                    break
+            if new_size is None:
+                new_size = max(font_sizes)
+        else:  # Decreasing
+            new_size = None
+            for size in sorted(font_sizes, reverse=True):
+                if size < current_size:
+                    new_size = size
+                    break
+            if new_size is None:
+                new_size = min(font_sizes)
+        
+        # Update the dropdown selection
+        for i, size in enumerate(font_sizes):
+            if size == new_size:
+                if win.font_size_handler_id:
+                    win.font_size_dropdown.handler_block(win.font_size_handler_id)
+                dropdown.set_selected(i)
+                if win.font_size_handler_id:
+                    win.font_size_dropdown.handler_unblock(win.font_size_handler_id)
+                break
+        
+        # Apply the font size change with better cursor positioning
+        js_code = f"""
+        (function() {{
+            // Store the new font size globally
+            if (!window.fontSizeState) {{
+                window.fontSizeState = {{}};
+            }}
+            window.fontSizeState.nextSize = '{new_size}pt';
+            
+            // Get editor and selection
+            const editor = document.getElementById('editor');
+            const selection = window.getSelection();
+            
+            if (!selection.rangeCount) return false;
+            
+            const range = selection.getRangeAt(0);
+            
+            // If text is selected, apply font size to selection
+            if (!range.collapsed) {{
+                // Apply font size to selected text
+                document.execCommand('fontSize', false, '7');
+                
+                const fontElements = editor.querySelectorAll('font[size="7"]');
+                for (const font of fontElements) {{
+                    font.removeAttribute('size');
+                    font.style.fontSize = '{new_size}pt';
+                }}
+                
+                // Clean up the DOM
+                cleanupEditorTags();
+                
+                // Record state
+                saveState();
+                window.lastContent = editor.innerHTML;
+                window.redoStack = [];
+                
+                try {{
+                    window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                }} catch(e) {{
+                    console.log("Could not notify about changes:", e);
+                }}
+            }} else {{
+                // No text selected - we'll set up the size for the next typed character
+                
+                // Clear any existing handlers
+                if (window.fontSizeHandler) {{
+                    editor.removeEventListener('input', window.fontSizeHandler);
+                    window.fontSizeHandler = null;
+                }}
+                
+                window.fontSizeHandler = function(e) {{
+                    // Remove the handler immediately to ensure it only runs once
+                    editor.removeEventListener('input', window.fontSizeHandler);
+                    window.fontSizeHandler = null;
+                    
+                    // Size to apply
+                    const fontSize = window.fontSizeState.nextSize;
+                    
+                    // Get the current selection
+                    const sel = window.getSelection();
+                    if (!sel.rangeCount) return;
+                    
+                    const currRange = sel.getRangeAt(0);
+                    
+                    // We need text nodes for this to work
+                    if (!currRange.startContainer || currRange.startContainer.nodeType !== 3) return;
+                    
+                    // If nothing was typed or no offset, ignore
+                    if (currRange.startOffset <= 0) return;
+                    
+                    try {{
+                        // Create a range just for the last typed character
+                        const charRange = document.createRange();
+                        charRange.setStart(currRange.startContainer, currRange.startOffset - 1);
+                        charRange.setEnd(currRange.startContainer, currRange.startOffset);
+                        
+                        // Remember where the cursor is
+                        const endContainer = currRange.endContainer;
+                        const endOffset = currRange.endOffset;
+                        
+                        // Select just the typed character
+                        sel.removeAllRanges();
+                        sel.addRange(charRange);
+                        
+                        // Apply formatting to the selected character
+                        document.execCommand('fontSize', false, '7');
+                        
+                        // Update the font elements with the correct size
+                        const fontElements = editor.querySelectorAll('font[size="7"]');
+                        for (const font of fontElements) {{
+                            font.removeAttribute('size');
+                            font.style.fontSize = fontSize;
+                        }}
+                        
+                        // Important: Set the cursor AFTER the new character
+                        // The DOM structure has changed, so we need to find where to put the cursor
+                        // We know we want to place it after the newly formatted character
+                        
+                        // Create a new selection at the right place
+                        const newRange = document.createRange();
+                        
+                        // Find the newly created font element
+                        const newFontElements = Array.from(editor.querySelectorAll('font')).filter(
+                            font => font.style.fontSize === fontSize
+                        );
+                        
+                        if (newFontElements.length > 0) {{
+                            // Find the last text node inside this font element
+                            const lastFont = newFontElements[newFontElements.length - 1];
+                            let lastTextNode = null;
+                            
+                            // Function to find the last text node in an element
+                            function findLastTextNode(node) {{
+                                if (node.nodeType === 3) return node;
+                                
+                                let result = null;
+                                for (let i = node.childNodes.length - 1; i >= 0; i--) {{
+                                    result = findLastTextNode(node.childNodes[i]);
+                                    if (result) return result;
+                                }}
+                                
+                                return null;
+                            }}
+                            
+                            lastTextNode = findLastTextNode(lastFont);
+                            
+                            if (lastTextNode) {{
+                                // Place cursor at the end of the text node
+                                newRange.setStart(lastTextNode, lastTextNode.length);
+                                newRange.setEnd(lastTextNode, lastTextNode.length);
+                            }} else {{
+                                // If no text node found, place cursor after the font element
+                                const parent = lastFont.parentNode;
+                                const index = Array.from(parent.childNodes).indexOf(lastFont);
+                                newRange.setStart(parent, index + 1);
+                                newRange.setEnd(parent, index + 1);
+                            }}
+                        }} else {{
+                            // If we can't find the font element, try to restore to original position
+                            try {{
+                                newRange.setStart(endContainer, endOffset);
+                                newRange.setEnd(endContainer, endOffset);
+                            }} catch (e) {{
+                                // If that fails too, just set cursor at the start of editor
+                                newRange.setStart(editor, 0);
+                                newRange.setEnd(editor, 0);
+                            }}
+                        }}
+                        
+                        // Apply the new selection
+                        sel.removeAllRanges();
+                        sel.addRange(newRange);
+                        
+                        // Clean up the DOM
+                        cleanupEditorTags();
+                        
+                        // Record state
+                        saveState();
+                        window.lastContent = editor.innerHTML;
+                        window.redoStack = [];
+                        
+                        try {{
+                            window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                        }} catch(e) {{
+                            console.log("Could not notify about changes:", e);
+                        }}
+                    }} catch (error) {{
+                        console.error("Error applying font size:", error);
+                    }}
+                }};
+                
+                // Add the input handler
+                editor.addEventListener('input', window.fontSizeHandler);
+                
+                // Add a handler to clean up if user clicks elsewhere
+                if (window.fontSizeClickHandler) {{
+                    document.removeEventListener('mousedown', window.fontSizeClickHandler);
+                }}
+                
+                window.fontSizeClickHandler = function() {{
+                    if (window.fontSizeHandler) {{
+                        editor.removeEventListener('input', window.fontSizeHandler);
+                        window.fontSizeHandler = null;
+                    }}
+                    document.removeEventListener('mousedown', window.fontSizeClickHandler);
+                }};
+                
+                document.addEventListener('mousedown', window.fontSizeClickHandler);
+            }}
+            
+            return true;
+        }})();
+        """
+        
+        # Execute the JavaScript code
+        self.execute_js(win, js_code)
+        
+        # Update status message
+        msg_action = "increased" if points_change > 0 else "decreased"
+        win.statusbar.set_text(f"Font size {msg_action} to {new_size}pt")
+        
+        # Keep focus on webview
+        win.webview.grab_focus()
+        
+        
 def main():
     app = WebkitWordApp()
     return app.run(sys.argv)
