@@ -26,6 +26,7 @@ class WebkitWordApp(Adw.Application):
         super().__init__(application_id='io.github.fastrizwaan.WebkitWord',
                         flags=Gio.ApplicationFlags.HANDLES_OPEN,
                         **kwargs)
+        self.version = 0.1
         self.windows = []  # Track all open windows
         self.window_buttons = {}  # Track window menu buttons {window_id: button}
         self.connect('activate', self.on_activate)
@@ -2172,7 +2173,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         about = Adw.AboutWindow(
             transient_for=parent_window,
             application_name="Webkit Word",
-            application_icon="text-editor",
+            application_icon="io.github.fastrizwaan.WebkitWord",
+            version=f"{self.version}",
             copyright="GNU General Public License (GPLv3+)",
             comments="rich text editor using webkit",
             website="https://github.com/fastrizwaan/webkitword",
