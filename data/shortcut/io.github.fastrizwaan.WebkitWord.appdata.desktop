@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=WebkitWord
+Type=Application
+Comment=Rich text editor using WebKit
+Exec=webkitword %F
+MimeType=text/html;text/plain;application/xhtml+xml;application/x-mhtml;
+Icon=io.github.fastrizwaan.WebkitWord
+StartupNotify=true
+Terminal=false
+Categories=Office;GTK;WordProcessor;TextEditor;
+Keywords=text;editor;word;processor;html;rich;document;webkitword;

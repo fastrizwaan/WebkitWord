@@ -1,0 +1,56 @@
+id: io.github.fastrizwaan.WebkitWord
+sdk: org.gnome.Sdk
+runtime: org.gnome.Platform
+runtime-version: '48'
+command: webkitword
+base: org.libreoffice.LibreOffice
+base-version: stable
+finish-args:
+  - --allow=devel
+  - --allow=multiarch
+  - --device=all
+  - --filesystem=~/.local/share/applications:create
+  - --filesystem=~/.var/app/io.github.fastrizwaan.WebkitWord/data/webkitword:create
+  - --share=ipc
+  - --share=network
+  - --socket=pulseaudio
+  - --socket=x11
+  - --system-talk-name=org.freedesktop.UDisks2
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=io.github.fastrizwaan.WebkitWord
+  - --own-name=io.github.fastrizwaan.WebkitWord
+  - --talk-name=org.gnome.SettingsDaemon
+  - --talk-name=org.gnome.SessionManager
+  - --talk-name=org.a11y.Bus
+  - --filesystem=host
+  - --filesystem=xdg-run/gvfs
+  - --filesystem=xdg-run/gvfsd
+
+  
+modules:
+  - name: pyyaml
+    buildsystem: simple
+    build-commands:
+      - pip3 install --prefix=/app PyYAML*.whl
+    sources:
+      - type: file
+        url: https://files.pythonhosted.org/packages/b9/2b/614b4752f2e127db5cc206abc23a8c19678e92b23c3db30fc86ab731d3bd/PyYAML-6.0.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+        sha256: 80bab7bfc629882493af4aa31a4cfa43a4c57c83813253626916b8c7ada83476
+        only-arches:
+          - x86_64
+        x-checker-data:
+          type: pypi
+          name: PyYAML
+          packagetype: bdist_wheel
+
+  - name: WebkitWord
+    buildsystem: simple
+    build-commands:
+      - ./setup -i --prefix=/app 
+      - install -Dm755 src/wcterm.py    /app/bin/wcterm
+
+    sources:
+      - type: git
+        tag: 0.99.0
+        commit: 7ef5365dd6bc1358f57b18f4a51b5c582d48a67e
+        url: https://github.com/fastrizwaan/WebkitWord.git

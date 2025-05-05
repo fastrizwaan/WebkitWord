@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.fastrizwaan.webkitword</id>
+  <name>WebkitWord</name>
+  <summary>Rich text editor using WebKit</summary>
+  <description>
+    <p>Webkit Word is a feature-rich text editor built with GTK4/Libadwaita that provides a modern word processing experience. Using the WebKit rendering engine, it offers powerful text editing capabilities in a clean, intuitive interface.</p>
+    <p>Key features include:</p>
+    <ul>
+      <li>Advanced text formatting with support for various fonts, sizes, and styles</li>
+      <li>Paragraph formatting with alignment, indentation, and spacing controls</li>
+      <li>Lists (bulleted and numbered) with proper formatting</li>
+      <li>Table insertion and editing with comprehensive tools</li>
+      <li>Multiple document support with multi window interface</li>
+      <li>Image insertion and manipulation</li>
+      <li>Support for links and embedded content</li>
+      <li>Save in multiple formats including HTML, MHTML, PDF, and plain text</li>
+      <li>Find and replace functionality</li>
+      <li>Word Art and special text effects</li>
+      <li>Right-to-left text support</li>
+    </ul>
+  </description>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <developer_name>Mohammed Asif Ali Rizvan</developer_name>
+  <url type="homepage">https://github.com/fastrizwaan/webkitword</url>
+  <url type="bugtracker">https://github.com/fastrizwaan/webkitword/issues</url>
+  <url type="vcs-browser">https://github.com/fastrizwaan/webkitword</url>
+  <categories>
+    <category>Office</category>
+    <category>TextEditor</category>
+    <category>WordProcessor</category>
+    <category>GTK</category>
+  </categories>
+  <keywords>
+    <keyword>Text Editor</keyword>
+    <keyword>Word Processor</keyword>
+    <keyword>WebKit</keyword>
+    <keyword>Rich Text</keyword>
+    <keyword>HTML Editor</keyword>
+  </keywords>
+  <launchable type="desktop-id">io.github.fastrizwaan.webkitword.desktop</launchable>
+  <screenshots>
+    <!-- Replace with actual screenshot URLs once available -->
+    <screenshot type="default">
+      <image>https://github.com/fastrizwaan/webkitword/raw/main/screenshots/main-window.png</image>
+      <caption>Main editing window with formatting toolbar</caption>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="0.1" date="2025-05-05">
+      <description>
+        <p>Initial release with core editing functionality, including text formatting, tables, lists, and multiple document support.</p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">none</content_attribute>
+    <content_attribute id="violence-fantasy">none</content_attribute>
+    <content_attribute id="violence-realistic">none</content_attribute>
+    <content_attribute id="violence-bloodshed">none</content_attribute>
+    <content_attribute id="violence-sexual">none</content_attribute>
+    <content_attribute id="violence-desecration">none</content_attribute>
+    <content_attribute id="violence-slavery">none</content_attribute>
+    <content_attribute id="violence-worship">none</content_attribute>
+    <content_attribute id="drugs-alcohol">none</content_attribute>
+    <content_attribute id="drugs-narcotics">none</content_attribute>
+    <content_attribute id="drugs-tobacco">none</content_attribute>
+    <content_attribute id="sex-nudity">none</content_attribute>
+    <content_attribute id="sex-themes">none</content_attribute>
+    <content_attribute id="sex-homosexuality">none</content_attribute>
+    <content_attribute id="sex-prostitution">none</content_attribute>
+    <content_attribute id="sex-adultery">none</content_attribute>
+    <content_attribute id="sex-appearance">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+    <content_attribute id="language-humor">none</content_attribute>
+    <content_attribute id="language-discrimination">none</content_attribute>
+    <content_attribute id="social-chat">none</content_attribute>
+    <content_attribute id="social-info">none</content_attribute>
+    <content_attribute id="social-audio">none</content_attribute>
+    <content_attribute id="social-location">none</content_attribute>
+    <content_attribute id="social-contacts">none</content_attribute>
+    <content_attribute id="money-purchasing">none</content_attribute>
+    <content_attribute id="money-gambling">none</content_attribute>
+  </content_rating>
+  <requires>
+    <display_length compare="ge">small</display_length>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </requires>
+  <provides>
+    <binary>webkitword</binary>
+  </provides>
+</component>

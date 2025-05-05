@@ -23,7 +23,7 @@ import keyboard_shortcuts
  
 class WebkitWordApp(Adw.Application):
     def __init__(self, **kwargs):
-        super().__init__(application_id='io.github.fastrizwaan.webkitword',
+        super().__init__(application_id='io.github.fastrizwaan.WebkitWord',
                         flags=Gio.ApplicationFlags.HANDLES_OPEN,
                         **kwargs)
         self.windows = []  # Track all open windows

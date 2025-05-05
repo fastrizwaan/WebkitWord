@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="16px"
+   viewBox="0 0 16 16"
+   width="16px"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="format-word-art-symbolic.svg"
+   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter92"
+       x="-0.17467206"
+       y="-0.17467207"
+       width="1.4221241"
+       height="1.4221242">
+      <feFlood
+         result="flood"
+         in="SourceGraphic"
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)"
+         id="feFlood91" />
+      <feGaussianBlur
+         result="blur"
+         in="SourceGraphic"
+         stdDeviation="1.000000"
+         id="feGaussianBlur91" />
+      <feOffset
+         result="offset"
+         in="blur"
+         dx="1.000000"
+         dy="1.000000"
+         id="feOffset91" />
+      <feComposite
+         result="comp1"
+         operator="in"
+         in="flood"
+         in2="offset"
+         id="feComposite91" />
+      <feComposite
+         result="comp2"
+         operator="over"
+         in="SourceGraphic"
+         in2="comp1"
+         id="feComposite92" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="22.627417"
+     inkscape:cx="4.331029"
+     inkscape:cy="13.523417"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <path
+     d="m 6.737224,0.1485489 c -0.7275607,-1e-7 -1.3589504,0.44854458 -1.5512932,1.0887748 L 1.1299862,13.888582 H 4.454188 l 1.0328023,-2.944293 h 5.0552947 l 1.003534,2.944293 H 14.87002 L 10.86007,1.2373242 C 10.67191,0.59325951 10.036337,0.1485493 9.3087763,0.148549 Z m 1.2627789,2.944293 c 0.2048877,0.00384 0.3846878,0.034503 0.4808593,0.3565357 l 1.3338584,4.5506229 -3.6294411,-1e-6 1.3505858,-4.600457 C 7.6194937,3.1158474 7.8076559,3.0890109 8.0000001,3.0928447 Z m 0,0"
+     fill="#222222"
+     id="path1"
+     style="stroke-width:1.02497;filter:url(#filter92)"
+     transform="rotate(15,7.9647386,9.029161)" />
+</svg>

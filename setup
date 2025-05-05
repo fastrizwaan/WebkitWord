@@ -1,0 +1,201 @@
+#!/bin/bash
+
+INSTALL_PATH="/usr/local"
+FORCE_INSTALL=false
+
+# List of required Python modules
+REQUIRED_PYTHON_MODULES=(
+    "gi"  # PyGObject for GTK, WebKit, etc.
+)
+
+show_help() {
+    echo "Usage: ./setup [OPTION]..."
+    echo "Install or uninstall WebkitWord HTML Editor."
+    echo ""
+    echo "Options:"
+    echo "  -i, --install         Install WebkitWord"
+    echo "  -u, --uninstall       Uninstall WebkitWord"
+    echo "  -p, --prefix=PATH     Specify installation prefix (default: /usr/local)"
+    echo "  -f, --force           Force installation even if dependencies are not met"
+    echo "  -h, --help            Display this help and exit"
+}
+
+check_dependencies() {
+    local missing_programs=()
+
+    # Required system programs for WebkitWord
+    local required_programs=(
+        "python3"  # Python 3 runtime
+    )
+
+    for prog in "${required_programs[@]}"; do
+        if ! command -v "$prog" &> /dev/null; then
+            missing_programs+=("$prog")
+        fi
+    done
+
+    if [ ${#missing_programs[@]} -ne 0 ]; then
+        echo "The following required programs are missing:"
+        for prog in "${missing_programs[@]}"; do
+            echo "  - $prog"
+        done
+        echo ""
+        echo "Please install them before proceeding or use the -f or --force option to install WebkitWord anyway."
+        echo ""
+        echo "On Fedora:"
+        echo "  sudo dnf install python3 python3-gobject gtk4 webkitgtk6"
+        return 1
+    fi
+
+    return 0
+}
+
+check_python_dependencies() {
+    local missing_modules=()
+
+    for module in "${REQUIRED_PYTHON_MODULES[@]}"; do
+        python3 -c "import $module" &> /dev/null
+        if [ $? -ne 0 ]; then
+            missing_modules+=("$module")
+        fi
+    done
+
+    if [ ${#missing_modules[@]} -ne 0 ]; then
+        echo "The following required Python modules are missing:"
+        for module in "${missing_modules[@]}"; do
+            echo "  - $module"
+        done
+        echo ""
+        echo "You can install them using pip:"
+        echo "  pip3 install ${missing_modules[*]}"
+        echo "Or on Fedora:"
+        echo "  sudo dnf install python3-gobject"
+        return 1
+    fi
+
+    return 0
+}
+
+install_files() {
+    echo "Installing WebkitWord to $INSTALL_PATH..."
+
+    # Create data directory for Python modules
+    mkdir -p "$INSTALL_PATH/share/webkitword"
+
+    # Install all Python scripts from src/ to datadir/webkitword/
+    for py_file in src/*.py; do
+        install -Dm644 "$py_file" "$INSTALL_PATH/share/webkitword/$(basename "$py_file")"
+    done
+
+    # Create symbolic link for webkitword.py in $INSTALL_PATH/bin
+    ln -sf "$INSTALL_PATH/share/webkitword/webkitword.py" "$INSTALL_PATH/bin/webkitword"
+
+    # Ensure the symbolic link is executable
+    chmod +x "$INSTALL_PATH/bin/webkitword"
+
+    # Install appdata file
+    install -Dm644 data/appdata/io.github.fastrizwaan.WebkitWord.appdata.xml "$INSTALL_PATH/share/metainfo/io.github.fastrizwaan.WebkitWord.appdata.xml"
+
+    # Install app icon
+    install -Dm644 data/icons/apps/io.github.fastrizwaan.WebkitWord.svg "$INSTALL_PATH/share/icons/hicolor/scalable/apps/io.github.fastrizwaan.WebkitWord.svg"
+
+    # Install action icons
+    mkdir -p "$INSTALL_PATH/share/icons/hicolor/scalable/actions"
+    for icon in data/icons/actions/*.svg; do
+        install -Dm644 "$icon" "$INSTALL_PATH/share/icons/hicolor/scalable/actions/$(basename "$icon")"
+    done
+
+    # Install .desktop file
+    install -Dm644 data/shortcut/io.github.fastrizwaan.WebkitWord.appdata.desktop "$INSTALL_PATH/share/applications/io.github.fastrizwaan.WebkitWord.desktop"
+
+    # Update system databases
+    echo "Updating MIME, icon, and desktop caches..."
+    update-mime-database "$INSTALL_PATH/share/mime" &> /dev/null || echo "Failed to update MIME database."
+    gtk-update-icon-cache "$INSTALL_PATH/share/icons/hicolor/" &> /dev/null || echo "Failed to update icon cache."
+    update-desktop-database "$INSTALL_PATH/share/applications/" &> /dev/null || echo "Failed to update desktop database."
+
+    echo "WebkitWord installed successfully."
+}
+
+uninstall_files() {
+    echo "Uninstalling WebkitWord from $INSTALL_PATH..."
+
+    # Remove Python scripts
+    rm -rf "$INSTALL_PATH/share/webkitword"
+
+    # Remove symbolic link
+    rm -f "$INSTALL_PATH/bin/webkitword"
+
+    # Remove appdata file
+    rm -f "$INSTALL_PATH/share/metainfo/io.github.fastrizwaan.WebkitWord.appdata.xml"
+
+    # Remove app icon
+    rm -f "$INSTALL_PATH/share/icons/hicolor/scalable/apps/io.github.fastrizwaan.WebkitWord.svg"
+
+    # Remove action icons
+    rm -f "$INSTALL_PATH/share/icons/hicolor/scalable/actions/"*.svg
+
+    # Remove .desktop file
+    rm -f "$INSTALL_PATH/share/applications/io.github.fastrizwaan.WebkitWord.desktop"
+
+    # Update system databases
+    echo "Updating MIME, icon, and desktop caches after uninstall..."
+    update-mime-database "$INSTALL_PATH/share/mime" &> /dev/null || echo "Failed to update MIME database."
+    gtk-update-icon-cache "$INSTALL_PATH/share/icons/hicolor/" &> /dev/null || echo "Failed to update icon cache."
+    update-desktop-database "$INSTALL_PATH/share/applications/" &> /dev/null || echo "Failed to update desktop database."
+
+    echo "WebkitWord uninstalled successfully."
+}
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        -i|--install)
+            ACTION="install"
+            shift
+            ;;
+        -u|--uninstall)
+            ACTION="uninstall"
+            shift
+            ;;
+        -p|--prefix=*)
+            INSTALL_PATH="${key#*=}"
+            shift
+            ;;
+        -f|--force)
+            FORCE_INSTALL=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $key"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+if [ -z "$ACTION" ]; then
+    show_help
+    exit 0
+fi
+
+if [ "$ACTION" == "install" ]; then
+    if ! check_dependencies && [ "$FORCE_INSTALL" = false ]; then
+        echo "Dependencies are not satisfied. Use -f or --force to force the installation."
+        exit 1
+    fi
+
+    if ! check_python_dependencies && [ "$FORCE_INSTALL" = false ]; then
+        echo "Python dependencies are not satisfied. Use -f or --force to force the installation."
+        exit 1
+    fi
+
+    install_files
+elif [ "$ACTION" == "uninstall" ]; then
+    uninstall_files
+fi
