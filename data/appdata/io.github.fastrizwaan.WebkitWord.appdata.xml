@@ -23,7 +23,7 @@
   </description>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
-  <developer>
+  <developer id="github.com/fastrizwaan">
     <name>Mohammed Asif Ali Rizvan</name>
     <email>fastrizwaan@gmail.com</email>
     <url>https://github.com/fastrizwaan</url>
@@ -47,6 +47,7 @@
   <launchable type="desktop-id">io.github.fastrizwaan.WebkitWord.desktop</launchable>
   <screenshots>
     <screenshot type="default">
+      <caption>WebkitWord main editor interface</caption>
       <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/webkitword.png</image>
     </screenshot>
   </screenshots>
