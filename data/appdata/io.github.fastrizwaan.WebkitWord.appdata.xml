@@ -3,6 +3,7 @@
   <id>io.github.fastrizwaan.WebkitWord</id>
   <name>WebkitWord</name>
   <summary>Rich text editor using WebKit</summary>
+  <icon type="stock">io.github.fastrizwaan.WebkitWord</icon>
   <description>
     <p>Webkit Word is a feature-rich text editor built with GTK4/Libadwaita that provides a modern word processing experience. Using the WebKit rendering engine, it offers powerful text editing capabilities in a clean, intuitive interface.</p>
     <p>Key features include:</p>
@@ -43,7 +44,7 @@
     <keyword>Rich Text</keyword>
     <keyword>HTML Editor</keyword>
   </keywords>
-  <launchable type="desktop-id">io.github.fastrizwaan.webkitword.desktop</launchable>
+  <launchable type="desktop-id">io.github.fastrizwaan.WebkitWord.desktop</launchable>
   <screenshots>
     <screenshot type="default">
       <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/webkitword.png</image>
