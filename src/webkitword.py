@@ -359,83 +359,20 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # --- LEFT SIDE OF HEADERBAR ---
         
-        # File operations group (New, Open, Save, Save As)
-        file_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        #file_group.add_css_class("flat-header")
-        file_group.add_css_class("linked")  # Apply linked styling
-        #file_group.set_margin_end(2)
+        # Add file toolbar toggle button
+        file_toolbar_toggle = Gtk.ToggleButton(icon_name="view-more-horizontal-symbolic")
+        file_toolbar_toggle.set_tooltip_text("Show/Hide File Toolbar")
+        file_toolbar_toggle.set_active(False)  # Hidden by default
+        file_toolbar_toggle.connect("toggled", lambda btn: self.toggle_file_toolbar(win, btn))
+        file_toolbar_toggle.add_css_class("flat")
+        win.headerbar.pack_start(file_toolbar_toggle)
         
-        # New button
-        new_button = Gtk.Button(icon_name="document-new-symbolic")
-        new_button.set_tooltip_text("New Document in New Window")
-        new_button.connect("clicked", lambda btn: self.on_new_clicked(win, btn))
-        new_button.set_size_request(40, 36)
-        
-        # Open button
-        open_button = Gtk.Button(icon_name="document-open-symbolic")
-        open_button.set_tooltip_text("Open File in New Window")
-        open_button.connect("clicked", lambda btn: self.on_open_clicked(win, btn))
-        open_button.set_size_request(40, 36)
-        
-        # Save button
-        save_button = Gtk.Button(icon_name="document-save-symbolic")
-        save_button.set_tooltip_text("Save File")
-        save_button.connect("clicked", lambda btn: self.on_save_clicked(win, btn))
-        save_button.set_size_request(40, 36)
-        
-        # Save As button
-        save_as_button = Gtk.Button(icon_name="document-save-as-symbolic")
-        save_as_button.set_tooltip_text("Save File As")
-        save_as_button.connect("clicked", lambda btn: self.on_save_as_clicked(win, btn))
-        save_as_button.set_size_request(40, 36)
-        
-        # Add buttons to file group
-        file_group.append(new_button)
-        file_group.append(open_button)
-        file_group.append(save_button)
-        file_group.append(save_as_button)
-        
-        # Add file group to headerbar
-        win.headerbar.pack_start(file_group)
-        
-        # Edit operations group (Select All, Cut, Copy, Paste)
-        edit_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        edit_group.add_css_class("linked")
-        edit_group.set_margin_end(2)
-        
-        # Select All button
-        select_all_button = Gtk.Button(icon_name="edit-select-all-symbolic")
-        select_all_button.set_tooltip_text("Select All")
-        select_all_button.connect("clicked", lambda btn: self.on_select_all_clicked(win, btn))
-        select_all_button.set_size_request(40, 36)
-        
-        # Cut button
-        cut_button = Gtk.Button(icon_name="edit-cut-symbolic")
-        cut_button.set_tooltip_text("Cut")
-        cut_button.connect("clicked", lambda btn: self.on_cut_clicked(win, btn))
-        cut_button.set_size_request(40, 36)
-        
-        # Copy button
-        copy_button = Gtk.Button(icon_name="edit-copy-symbolic")
-        copy_button.set_tooltip_text("Copy")
-        copy_button.connect("clicked", lambda btn: self.on_copy_clicked(win, btn))
-        copy_button.set_size_request(40, 36)
-        
-        # Paste button
-        paste_button = Gtk.Button(icon_name="edit-paste-symbolic")
-        paste_button.set_tooltip_text("Paste")
-        paste_button.connect("clicked", lambda btn: self.on_paste_clicked(win, btn))
-        paste_button.set_size_request(40, 36)
-        
-        # Add buttons to edit group
-        edit_group.append(select_all_button)
-        edit_group.append(cut_button)
-        edit_group.append(copy_button)
-        edit_group.append(paste_button)
-        
-        # Add edit group to headerbar (still on the left side, after file group)
-        win.headerbar.pack_start(edit_group)
-        
+
+        # Find-Replace toggle button
+        win.find_button = Gtk.ToggleButton(icon_name="edit-find-replace-symbolic")
+        win.find_button.set_tooltip_text("Find and Replace (Ctrl+F)")
+        win.find_button_handler_id = win.find_button.connect("toggled", lambda btn: self.on_find_button_toggled(win, btn))
+        win.find_button.set_size_request(40, 36)        
         # --- CENTER TITLE ---
         
         # Set up the window title widget
@@ -448,58 +385,10 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # --- RIGHT SIDE OF HEADERBAR ---
         
-        # Undo/Redo group
-        undo_redo_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        undo_redo_group.add_css_class("linked")
-        undo_redo_group.set_margin_end(2)
-        
-        # Undo button
-        win.undo_button = Gtk.Button(icon_name="edit-undo-symbolic")
-        win.undo_button.set_tooltip_text("Undo")
-        win.undo_button.connect("clicked", lambda btn: self.on_undo_clicked(win, btn))
-        win.undo_button.set_sensitive(False)  # Initially disabled
-        win.undo_button.set_size_request(40, 36)
-        
-        # Redo button
-        win.redo_button = Gtk.Button(icon_name="edit-redo-symbolic")
-        win.redo_button.set_tooltip_text("Redo")
-        win.redo_button.connect("clicked", lambda btn: self.on_redo_clicked(win, btn))
-        win.redo_button.set_sensitive(False)  # Initially disabled
-        win.redo_button.set_size_request(40, 36)
-        
-        # Add buttons to undo group
-        undo_redo_group.append(win.undo_button)
-        undo_redo_group.append(win.redo_button)
-        
-
-        
-        # Print/Find group
-        print_find_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        print_find_group.add_css_class("linked")
-        print_find_group.set_margin_end(2)
-        
-        # Print button
-        print_button = Gtk.Button(icon_name="document-print-symbolic")
-        print_button.set_tooltip_text("Print Document")
-        print_button.connect("clicked", lambda btn: self.on_print_clicked(win, btn) if hasattr(self, "on_print_clicked") else None)
-        print_button.set_size_request(40, 36)
-        
-        # Find-Replace toggle button
-        win.find_button = Gtk.ToggleButton(icon_name="edit-find-replace-symbolic")
-        win.find_button.set_tooltip_text("Find and Replace (Ctrl+F)")
-        win.find_button_handler_id = win.find_button.connect("toggled", lambda btn: self.on_find_button_toggled(win, btn))
-        win.find_button.set_size_request(40, 36)
-        
-        # Add buttons to print/find group
-        print_find_group.append(print_button)
-        print_find_group.append(win.find_button)
-        
-
-        
         # Create menu button (last item on right side)
         menu_button = Gtk.MenuButton()
         menu_button.set_icon_name("open-menu-symbolic")
-        menu_button.add_css_class("flat")  # Add flat style
+        #menu_button.add_css_class("flat")  # Add flat style
         
         # Create menu
         menu = Gio.Menu()
@@ -527,15 +416,10 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         menu.append_section("Application", app_section)
         
         menu_button.set_menu_model(menu)
-
         
         # Add menu button to header bar
         win.headerbar.pack_end(menu_button)
-        # Add print/find group to headerbar
-        win.headerbar.pack_end(print_find_group)        
-        # Add undo group to headerbar
-        win.headerbar.pack_end(undo_redo_group)
-        # Create window menu button on the right side
+
         self.add_window_menu_button(win)
             
 
@@ -664,11 +548,49 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
     def toggle_file_toolbar(self, win, *args):
         """Toggle the visibility of the file toolbar with animation"""
+        is_revealed = win.file_toolbar_revealer.get_reveal_child()
+        win.file_toolbar_revealer.set_reveal_child(not is_revealed)
+        status = "hidden" if is_revealed else "shown"
+        win.statusbar.set_text(f"File toolbar {status}")
+        
+        # If the button is provided (from headerbar), update its state
+        if len(args) > 0 and isinstance(args[0], Gtk.ToggleButton):
+            toggle_button = args[0]
+            # Temporarily block signal handler to prevent recursion
+            handlers = toggle_button.list_signal_handlers()
+            for handler_id in handlers:
+                toggle_button.handler_block(handler_id)
+            
+            toggle_button.set_active(not is_revealed)
+            
+            # Unblock the handlers
+            for handler_id in handlers:
+                toggle_button.handler_unblock(handler_id)
+        
+        return True
+        
+    def toggle_format_toolbar(self, win, *args):
+        """Toggle the visibility of the formatting toolbar with animation"""
         is_revealed = win.toolbar_revealer.get_reveal_child()
         win.toolbar_revealer.set_reveal_child(not is_revealed)
         status = "hidden" if is_revealed else "shown"
-        win.statusbar.set_text(f"Toolbar {status}")
-        return True     
+        win.statusbar.set_text(f"Format toolbar {status}")
+        
+        # If the button is provided (from headerbar), update its state
+        if len(args) > 0 and isinstance(args[0], Gtk.ToggleButton):
+            toggle_button = args[0]
+            # Temporarily block signal handler to prevent recursion
+            handlers = toggle_button.list_signal_handlers()
+            for handler_id in handlers:
+                toggle_button.handler_block(handler_id)
+            
+            toggle_button.set_active(not is_revealed)
+            
+            # Unblock the handlers
+            for handler_id in handlers:
+                toggle_button.handler_unblock(handler_id)
+        
+        return True
 
     def on_close_shortcut(self, win, *args):
         """Handle Ctrl+W shortcut to close current window"""
@@ -1530,6 +1452,15 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             self.update_window_menu()
         
     def update_undo_redo_state(self, win):
+        """Update undo/redo button states with more robust error handling"""
+        # First check if the necessary buttons exist
+        has_undo_buttons = hasattr(win, 'undo_button') or hasattr(win, 'undo_button_toolbar')
+        has_redo_buttons = hasattr(win, 'redo_button') or hasattr(win, 'redo_button_toolbar')
+        
+        # If we don't have any buttons to update, just return
+        if not (has_undo_buttons or has_redo_buttons):
+            return
+            
         try:
             # Get stack sizes to update button states
             win.webview.evaluate_javascript(
@@ -1540,55 +1471,9 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             )
         except Exception as e:
             print(f"Error updating undo/redo state: {e}")
-            # Fallback - enable buttons
-            win.undo_button.set_sensitive(True)
-            win.redo_button.set_sensitive(False)
+            # Fallback - set default button states
+            self._set_default_button_states(win, True, False)
         
-    def _on_get_stack_sizes(self, win, webview, result, user_data):
-        try:
-            js_result = webview.evaluate_javascript_finish(result)
-            if js_result:
-                # Try different approaches to get the result based on WebKit version
-                try:
-                    # Newer WebKit APIs
-                    if hasattr(js_result, 'get_js_value'):
-                        stack_sizes = js_result.get_js_value().to_string()
-                    # Direct value access - works in some WebKit versions
-                    elif hasattr(js_result, 'to_string'):
-                        stack_sizes = js_result.to_string()
-                    elif hasattr(js_result, 'get_string'):
-                        stack_sizes = js_result.get_string()
-                    else:
-                        # Fallback - try converting to string directly
-                        stack_sizes = str(js_result)
-                    
-                    # Parse the JSON result
-                    import json
-                    try:
-                        # Remove any surrounding quotes if present
-                        if stack_sizes.startswith('"') and stack_sizes.endswith('"'):
-                            stack_sizes = stack_sizes[1:-1]
-                        
-                        # Try to parse as JSON
-                        sizes = json.loads(stack_sizes)
-                        # Update button states
-                        win.undo_button.set_sensitive(sizes.get('undoSize', 0) > 1)
-                        win.redo_button.set_sensitive(sizes.get('redoSize', 0) > 0)
-                    except json.JSONDecodeError as je:
-                        print(f"Error parsing JSON: {je}, value was: {stack_sizes}")
-                        # Set reasonable defaults
-                        win.undo_button.set_sensitive(True)
-                        win.redo_button.set_sensitive(False)
-                except Exception as inner_e:
-                    print(f"Inner error processing JS result: {inner_e}")
-                    # Set reasonable defaults
-                    win.undo_button.set_sensitive(True)
-                    win.redo_button.set_sensitive(False)
-        except Exception as e:
-            print(f"Error getting stack sizes: {e}")
-            # Set reasonable defaults in case of error
-            win.undo_button.set_sensitive(True)
-            win.redo_button.set_sensitive(False)
             
     def on_undo_clicked(self, win, button):
         self.perform_undo(win)
@@ -2376,23 +2261,41 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         headerbar_box.append(headerbar_switch)
         content_box.append(headerbar_box)
         
-        # Show Toolbar option
-        toolbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        toolbar_box.set_margin_start(12)
-        toolbar_box.set_margin_top(12)
+        # Show File Toolbar option
+        file_toolbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        file_toolbar_box.set_margin_start(12)
+        file_toolbar_box.set_margin_top(12)
         
-        toolbar_label = Gtk.Label(label="Show Toolbar:")
-        toolbar_label.set_halign(Gtk.Align.START)
-        toolbar_label.set_hexpand(True)
+        file_toolbar_label = Gtk.Label(label="Show File Toolbar:")
+        file_toolbar_label.set_halign(Gtk.Align.START)
+        file_toolbar_label.set_hexpand(True)
         
-        toolbar_switch = Gtk.Switch()
-        toolbar_switch.set_active(active_win.toolbar_revealer.get_reveal_child())
-        toolbar_switch.set_valign(Gtk.Align.CENTER)
-        toolbar_switch.connect("state-set", lambda sw, state: active_win.toolbar_revealer.set_reveal_child(state))
+        file_toolbar_switch = Gtk.Switch()
+        file_toolbar_switch.set_active(active_win.file_toolbar_revealer.get_reveal_child())
+        file_toolbar_switch.set_valign(Gtk.Align.CENTER)
+        file_toolbar_switch.connect("state-set", lambda sw, state: active_win.file_toolbar_revealer.set_reveal_child(state))
         
-        toolbar_box.append(toolbar_label)
-        toolbar_box.append(toolbar_switch)
-        content_box.append(toolbar_box)
+        file_toolbar_box.append(file_toolbar_label)
+        file_toolbar_box.append(file_toolbar_switch)
+        content_box.append(file_toolbar_box)
+        
+        # Show Format Toolbar option
+        format_toolbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        format_toolbar_box.set_margin_start(12)
+        format_toolbar_box.set_margin_top(12)
+        
+        format_toolbar_label = Gtk.Label(label="Show Format Toolbar:")
+        format_toolbar_label.set_halign(Gtk.Align.START)
+        format_toolbar_label.set_hexpand(True)
+        
+        format_toolbar_switch = Gtk.Switch()
+        format_toolbar_switch.set_active(active_win.toolbar_revealer.get_reveal_child())
+        format_toolbar_switch.set_valign(Gtk.Align.CENTER)
+        format_toolbar_switch.connect("state-set", lambda sw, state: active_win.toolbar_revealer.set_reveal_child(state))
+        
+        format_toolbar_box.append(format_toolbar_label)
+        format_toolbar_box.append(format_toolbar_switch)
+        content_box.append(format_toolbar_box)
         
         # Show Statusbar option
         statusbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
@@ -2486,7 +2389,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Set dialog content and show
         dialog.set_child(content_box)
         dialog.present(active_win)
-
+        
     def on_preferences_dialog_closed(self, win):
         """Handle preferences dialog closed event"""
         # Remove the reference to allow proper cleanup
@@ -3355,7 +3258,19 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Set up the headerbar content
         self.setup_headerbar_content(win)
         
-        # Create toolbar revealer for smooth show/hide
+        # Create file toolbar revealer (new addition)
+        win.file_toolbar_revealer = Gtk.Revealer()
+        win.file_toolbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
+        win.file_toolbar_revealer.set_transition_duration(250)
+        win.file_toolbar_revealer.set_reveal_child(False)  # Hidden by default
+        win.file_toolbar_revealer.set_margin_top(0)
+        win.file_toolbar_revealer.set_margin_bottom(0)
+        
+        # Create and set the file toolbar
+        win.file_toolbar = self.create_file_toolbar(win)
+        win.file_toolbar_revealer.set_child(win.file_toolbar)
+        
+        # Create toolbar revealer for smooth show/hide for the formatting toolbar
         win.toolbar_revealer = Gtk.Revealer()
         win.toolbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
         win.toolbar_revealer.set_transition_duration(250)
@@ -3363,7 +3278,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.toolbar_revealer.set_margin_top(0)  # Ensure no top margin
         win.toolbar_revealer.set_margin_bottom(0)  # Ensure no top margin
         
-        # Create WrapBox for flexible toolbar layout
+        # Create WrapBox for flexible toolbar layout (for format toolbar)
         win.toolbars_wrapbox = Adw.WrapBox()
         win.toolbars_wrapbox.set_margin_start(4)
         win.toolbars_wrapbox.set_margin_end(2)
@@ -3378,8 +3293,9 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Set toolbar WrapBox as the child of toolbar revealer
         win.toolbar_revealer.set_child(win.toolbars_wrapbox)
         
-        # Set the toolbar revealer and headerbar revealer as top bars in the ToolbarView
+        # Set the toolbar revealers as top bars in the ToolbarView
         win.toolbar_view.add_top_bar(win.headerbar_revealer)
+        win.toolbar_view.add_top_bar(win.file_toolbar_revealer)
         win.toolbar_view.add_top_bar(win.toolbar_revealer)
         
         # Create content area
@@ -6939,153 +6855,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.webview.grab_focus()
 
 ##############
-    def setup_headerbar_content(self, win):
-        """Create improved headerbar content with essential operations"""
-        win.headerbar.set_margin_top(0)
-        win.headerbar.set_margin_bottom(0)
-        
-        # --- LEFT SIDE OF HEADERBAR ---
-        
-        # Add file toolbar toggle button
-        file_toolbar_toggle = Gtk.ToggleButton(icon_name="view-more-horizontal-symbolic")
-        file_toolbar_toggle.set_tooltip_text("Show/Hide File Toolbar")
-        file_toolbar_toggle.set_active(False)  # Hidden by default
-        file_toolbar_toggle.connect("toggled", lambda btn: self.toggle_file_toolbar(win, btn))
-        file_toolbar_toggle.add_css_class("flat")
-        win.headerbar.pack_start(file_toolbar_toggle)
-        
 
-        
-        # --- CENTER TITLE ---
-        
-        # Set up the window title widget
-        title_widget = Adw.WindowTitle()
-        title_widget.set_title("Untitled  - Webkit Word")
-        win.title_widget = title_widget  # Store for later updates
-        
-        # Save reference to update title 
-        win.headerbar.set_title_widget(title_widget)
-        
-        # --- RIGHT SIDE OF HEADERBAR ---
-        
-        # Create menu button (last item on right side)
-        menu_button = Gtk.MenuButton()
-        menu_button.set_icon_name("open-menu-symbolic")
-        #menu_button.add_css_class("flat")  # Add flat style
-        
-        # Create menu
-        menu = Gio.Menu()
-        
-        # File menu section
-        file_section = Gio.Menu()
-        file_section.append("New Window", "app.new-window")
-        file_section.append("Open", "app.open")
-        file_section.append("Save", "app.save")
-        file_section.append("Save As", "app.save-as")
-        menu.append_section("File", file_section)
-        
-        # View menu section
-        view_section = Gio.Menu()
-        view_section.append("Show/Hide File Toolbar", "app.toggle-file-toolbar")
-        view_section.append("Show/Hide Format Toolbar", "app.toggle-format-toolbar")
-        view_section.append("Show/Hide Statusbar", "app.toggle-statusbar")
-        menu.append_section("View", view_section)
-        
-        # App menu section
-        app_section = Gio.Menu()
-        app_section.append("Preferences", "app.preferences")
-        app_section.append("About", "app.about")
-        app_section.append("Quit", "app.quit")
-        menu.append_section("Application", app_section)
-        
-        menu_button.set_menu_model(menu)
-        
-        # Add menu button to header bar
-        win.headerbar.pack_end(menu_button)
-
-        self.add_window_menu_button(win)
-
-    # Now, let's create a file toolbar implementation
-    def create_window(self):
-        """Create a new window with separate headerbar and toolbar in ToolbarView"""
-        win = Adw.ApplicationWindow(application=self)
-        
-        # Set window properties
-        win.modified = False
-        win.auto_save_enabled = False
-        win.auto_save_interval = 60
-        win.current_file = None
-        win.auto_save_source_id = None
-        
-        win.set_default_size(1000, 768)
-        win.set_title("Untitled - Webkit Word")
-        
-        # Create the modern ToolbarView container
-        win.toolbar_view = Adw.ToolbarView()
-        
-        # Create the header bar
-        win.headerbar = Adw.HeaderBar()
-        win.headerbar.set_size_request(0,0)
-        win.headerbar.set_margin_bottom(0)  # Ensure no bottom margin
-        win.headerbar.set_margin_top(0)  # Ensure no bottom margin
-
-        # Create a revealer for the header bar
-        win.headerbar_revealer = Gtk.Revealer()
-        win.headerbar_revealer.set_size_request(0,0)
-        win.headerbar_revealer.set_margin_bottom(0)
-        win.headerbar_revealer.set_margin_top(0)  
-        win.headerbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
-        win.headerbar_revealer.set_transition_duration(250)
-        win.headerbar_revealer.set_reveal_child(True)  # Visible by default
-        win.headerbar_revealer.set_child(win.headerbar)
-
-        # Set up the headerbar content
-        self.setup_headerbar_content(win)
-        
-        # Create toolbar revealer for smooth show/hide for the formatting toolbar
-        win.toolbar_revealer = Gtk.Revealer()
-        win.toolbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
-        win.toolbar_revealer.set_transition_duration(250)
-        win.toolbar_revealer.set_reveal_child(True)  # Visible by default
-        win.toolbar_revealer.set_margin_top(0)  # Ensure no top margin
-        win.toolbar_revealer.set_margin_bottom(0)  # Ensure no top margin
-        
-        # Create WrapBox for flexible toolbar layout (for format toolbar)
-        win.toolbars_wrapbox = Adw.WrapBox()
-        win.toolbars_wrapbox.set_margin_start(4)
-        win.toolbars_wrapbox.set_margin_end(2)
-        win.toolbars_wrapbox.set_margin_top(1)
-        win.toolbars_wrapbox.set_margin_bottom(2)
-        win.toolbars_wrapbox.set_child_spacing(4)
-        win.toolbars_wrapbox.set_line_spacing(4)
-        
-        # Add toolbar content (like formatting buttons, etc.)
-        self.setup_toolbar_content(win)
-        
-        # Set toolbar WrapBox as the child of toolbar revealer
-        win.toolbar_revealer.set_child(win.toolbars_wrapbox)
-        
-        # Create file toolbar revealer (new addition)
-        win.file_toolbar_revealer = Gtk.Revealer()
-        win.file_toolbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
-        win.file_toolbar_revealer.set_transition_duration(250)
-        win.file_toolbar_revealer.set_reveal_child(False)  # Hidden by default
-        win.file_toolbar_revealer.set_margin_top(0)
-        win.file_toolbar_revealer.set_margin_bottom(0)
-        
-        # Create and set the file toolbar
-        win.file_toolbar = self.create_file_toolbar(win)
-        win.file_toolbar_revealer.set_child(win.file_toolbar)
-        
-        # Set the toolbar revealers as top bars in the ToolbarView
-        win.toolbar_view.add_top_bar(win.headerbar_revealer)
-        win.toolbar_view.add_top_bar(win.file_toolbar_revealer)
-        win.toolbar_view.add_top_bar(win.toolbar_revealer)
-        
-        # Rest of the window setup...
-        # [code continues as before]
-        
-        return win
 
     def create_file_toolbar(self, win):
         """Create the file toolbar with buttons mirroring the headerbar operations"""
@@ -7251,109 +7021,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         return file_toolbar
 
-    # Modify the existing toggle_file_toolbar function
-    def toggle_file_toolbar(self, win, *args):
-        """Toggle the visibility of the file toolbar with animation"""
-        is_revealed = win.file_toolbar_revealer.get_reveal_child()
-        win.file_toolbar_revealer.set_reveal_child(not is_revealed)
-        status = "hidden" if is_revealed else "shown"
-        win.statusbar.set_text(f"File toolbar {status}")
-        
-        # If the button is provided (from headerbar), update its state
-        if len(args) > 0 and isinstance(args[0], Gtk.ToggleButton):
-            toggle_button = args[0]
-            toggle_button.set_active(not is_revealed)
-        
-        return True
-
-    # Update the undo/redo state to include toolbar buttons
-    def update_undo_redo_state(self, win):
-        try:
-            # Get stack sizes to update button states
-            win.webview.evaluate_javascript(
-                "JSON.stringify(getStackSizes());",  # Ensure we get a proper JSON string
-                -1, None, None, None,
-                lambda webview, result, data: self._on_get_stack_sizes(win, webview, result, data), 
-                None
-            )
-        except Exception as e:
-            print(f"Error updating undo/redo state: {e}")
-            # Fallback - enable buttons
-            win.undo_button.set_sensitive(True)
-            win.redo_button.set_sensitive(False)
-            if hasattr(win, 'undo_button_toolbar'):
-                win.undo_button_toolbar.set_sensitive(True)
-            if hasattr(win, 'redo_button_toolbar'):
-                win.redo_button_toolbar.set_sensitive(False)
-
-    def _on_get_stack_sizes(self, win, webview, result, user_data):
-        try:
-            js_result = webview.evaluate_javascript_finish(result)
-            if js_result:
-                # Try different approaches to get the result based on WebKit version
-                try:
-                    # Newer WebKit APIs
-                    if hasattr(js_result, 'get_js_value'):
-                        stack_sizes = js_result.get_js_value().to_string()
-                    # Direct value access - works in some WebKit versions
-                    elif hasattr(js_result, 'to_string'):
-                        stack_sizes = js_result.to_string()
-                    elif hasattr(js_result, 'get_string'):
-                        stack_sizes = js_result.get_string()
-                    else:
-                        # Fallback - try converting to string directly
-                        stack_sizes = str(js_result)
-                    
-                    # Parse the JSON result
-                    import json
-                    try:
-                        # Remove any surrounding quotes if present
-                        if stack_sizes.startswith('"') and stack_sizes.endswith('"'):
-                            stack_sizes = stack_sizes[1:-1]
-                        
-                        # Try to parse as JSON
-                        sizes = json.loads(stack_sizes)
-                        # Update button states
-                        can_undo = sizes.get('undoSize', 0) > 1
-                        can_redo = sizes.get('redoSize', 0) > 0
-                        
-                        # Update headerbar buttons
-                        win.undo_button.set_sensitive(can_undo)
-                        win.redo_button.set_sensitive(can_redo)
-                        
-                        # Update toolbar buttons if they exist
-                        if hasattr(win, 'undo_button_toolbar'):
-                            win.undo_button_toolbar.set_sensitive(can_undo)
-                        if hasattr(win, 'redo_button_toolbar'):
-                            win.redo_button_toolbar.set_sensitive(can_redo)
-                            
-                    except json.JSONDecodeError as je:
-                        print(f"Error parsing JSON: {je}, value was: {stack_sizes}")
-                        # Set reasonable defaults
-                        win.undo_button.set_sensitive(True)
-                        win.redo_button.set_sensitive(False)
-                        if hasattr(win, 'undo_button_toolbar'):
-                            win.undo_button_toolbar.set_sensitive(True)
-                        if hasattr(win, 'redo_button_toolbar'):
-                            win.redo_button_toolbar.set_sensitive(False)
-                except Exception as inner_e:
-                    print(f"Inner error processing JS result: {inner_e}")
-                    # Set reasonable defaults
-                    win.undo_button.set_sensitive(True)
-                    win.redo_button.set_sensitive(False)
-                    if hasattr(win, 'undo_button_toolbar'):
-                        win.undo_button_toolbar.set_sensitive(True)
-                    if hasattr(win, 'redo_button_toolbar'):
-                        win.redo_button_toolbar.set_sensitive(False)
-        except Exception as e:
-            print(f"Error getting stack sizes: {e}")
-            # Set reasonable defaults in case of error
-            win.undo_button.set_sensitive(True)
-            win.redo_button.set_sensitive(False)
-            if hasattr(win, 'undo_button_toolbar'):
-                win.undo_button_toolbar.set_sensitive(True)
-            if hasattr(win, 'redo_button_toolbar'):
-                win.redo_button_toolbar.set_sensitive(False)
 
     # Add synchronization for find button state
     def on_find_button_toggled(self, win, button):
@@ -7388,153 +7055,125 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             GLib.idle_add(lambda: win.webview.grab_focus())
             win.statusbar.set_text("Find mode deactivated")        
 
-    def create_window(self):
-        """Create a new window with separate headerbar and toolbar in ToolbarView"""
-        win = Adw.ApplicationWindow(application=self)
-        
-        # Set window properties
-        win.modified = False
-        win.auto_save_enabled = False
-        win.auto_save_interval = 60
-        win.current_file = None
-        win.auto_save_source_id = None
-        
-        win.set_default_size(1000, 768)
-        win.set_title("Untitled - Webkit Word")
-        
-        # Create the modern ToolbarView container
-        win.toolbar_view = Adw.ToolbarView()
-        
-        # Create the header bar
-        win.headerbar = Adw.HeaderBar()
-        win.headerbar.set_size_request(0,0)
-        win.headerbar.set_margin_bottom(0)  # Ensure no bottom margin
-        win.headerbar.set_margin_top(0)  # Ensure no bottom margin
 
-        # Create a revealer for the header bar
-        win.headerbar_revealer = Gtk.Revealer()
-        win.headerbar_revealer.set_size_request(0,0)
-        win.headerbar_revealer.set_margin_bottom(0)
-        win.headerbar_revealer.set_margin_top(0)  
-        win.headerbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
-        win.headerbar_revealer.set_transition_duration(250)
-        win.headerbar_revealer.set_reveal_child(True)  # Visible by default
-        win.headerbar_revealer.set_child(win.headerbar)
 
-        # Set up the headerbar content
-        self.setup_headerbar_content(win)
+#########
+    def on_find_shortcut(self, win):
+        """Handle Ctrl+F shortcut to show the find bar"""
+        # Get current state of find bar
+        current_state = win.find_bar_revealer.get_reveal_child()
+        new_state = not current_state
         
-        # Create file toolbar revealer (new addition)
-        win.file_toolbar_revealer = Gtk.Revealer()
-        win.file_toolbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
-        win.file_toolbar_revealer.set_transition_duration(250)
-        win.file_toolbar_revealer.set_reveal_child(False)  # Hidden by default
-        win.file_toolbar_revealer.set_margin_top(0)
-        win.file_toolbar_revealer.set_margin_bottom(0)
+        # Update find bar state directly (this should always be safe)
+        win.find_bar_revealer.set_reveal_child(new_state)
         
-        # Create and set the file toolbar
-        win.file_toolbar = self.create_file_toolbar(win)
-        win.file_toolbar_revealer.set_child(win.file_toolbar)
+        # Now try to update buttons if they exist
+        if hasattr(win, 'find_button') and hasattr(win, 'find_button_handler_id'):
+            # Block signal handler to prevent recursion
+            win.find_button.handler_block(win.find_button_handler_id)
+            win.find_button.set_active(new_state)
+            win.find_button.handler_unblock(win.find_button_handler_id)
         
-        # Create toolbar revealer for smooth show/hide for the formatting toolbar
-        win.toolbar_revealer = Gtk.Revealer()
-        win.toolbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
-        win.toolbar_revealer.set_transition_duration(250)
-        win.toolbar_revealer.set_reveal_child(True)  # Visible by default
-        win.toolbar_revealer.set_margin_top(0)  # Ensure no top margin
-        win.toolbar_revealer.set_margin_bottom(0)  # Ensure no top margin
+        # Also update toolbar find button if it exists
+        if hasattr(win, 'find_button_toolbar'):
+            try:
+                handlers = win.find_button_toolbar.list_signal_handlers()
+                for handler_id in handlers:
+                    win.find_button_toolbar.handler_block(handler_id)
+                win.find_button_toolbar.set_active(new_state)
+                for handler_id in handlers:
+                    win.find_button_toolbar.handler_unblock(handler_id)
+            except (AttributeError, TypeError):
+                # Fallback if list_signal_handlers not available or other issue
+                win.find_button_toolbar.set_active(new_state)
         
-        # Create WrapBox for flexible toolbar layout (for format toolbar)
-        win.toolbars_wrapbox = Adw.WrapBox()
-        win.toolbars_wrapbox.set_margin_start(4)
-        win.toolbars_wrapbox.set_margin_end(2)
-        win.toolbars_wrapbox.set_margin_top(1)
-        win.toolbars_wrapbox.set_margin_bottom(2)
-        win.toolbars_wrapbox.set_child_spacing(4)
-        win.toolbars_wrapbox.set_line_spacing(4)
+        # Update focus and status
+        if new_state:
+            # Set focus to the find entry when activated
+            GLib.idle_add(lambda: win.find_entry.grab_focus())
+            win.statusbar.set_text("Find mode activated")
+        else:
+            # Return focus to the editor when deactivated
+            GLib.idle_add(lambda: win.webview.grab_focus())
+            win.statusbar.set_text("Find mode deactivated")
         
-        # Add toolbar content (like formatting buttons, etc.)
-        self.setup_toolbar_content(win)
-        
-        # Set toolbar WrapBox as the child of toolbar revealer
-        win.toolbar_revealer.set_child(win.toolbars_wrapbox)
-        
-        # Set the toolbar revealers as top bars in the ToolbarView
-        win.toolbar_view.add_top_bar(win.headerbar_revealer)
-        win.toolbar_view.add_top_bar(win.file_toolbar_revealer)
-        win.toolbar_view.add_top_bar(win.toolbar_revealer)
-        
-        # Create content area
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        content_box.set_vexpand(True)
-        content_box.set_hexpand(True)
-        
-        # Create webview
-        win.webview = WebKit.WebView()
-        win.webview.set_vexpand(True)
-        win.webview.set_hexpand(True) 
-        win.webview.load_html(self.get_editor_html(), None)
-        settings = win.webview.get_settings()
+        return True
+##############
+# Replace the _on_get_stack_sizes method with this more robust version:
+
+    def _on_get_stack_sizes(self, win, webview, result, user_data):
+        """Handle stack sizes information, with robust attribute checking"""
         try:
-            settings.set_enable_developer_extras(True)
-        except:
-            pass
+            js_result = webview.evaluate_javascript_finish(result)
+            if js_result:
+                # Try different approaches to get the result based on WebKit version
+                try:
+                    # Newer WebKit APIs
+                    if hasattr(js_result, 'get_js_value'):
+                        stack_sizes = js_result.get_js_value().to_string()
+                    # Direct value access - works in some WebKit versions
+                    elif hasattr(js_result, 'to_string'):
+                        stack_sizes = js_result.to_string()
+                    elif hasattr(js_result, 'get_string'):
+                        stack_sizes = js_result.get_string()
+                    else:
+                        # Fallback - try converting to string directly
+                        stack_sizes = str(js_result)
+                    
+                    # Parse the JSON result
+                    import json
+                    try:
+                        # Remove any surrounding quotes if present
+                        if stack_sizes.startswith('"') and stack_sizes.endswith('"'):
+                            stack_sizes = stack_sizes[1:-1]
+                        
+                        # Try to parse as JSON
+                        sizes = json.loads(stack_sizes)
+                        # Update button states
+                        can_undo = sizes.get('undoSize', 0) > 1
+                        can_redo = sizes.get('redoSize', 0) > 0
+                        
+                        # Update headerbar buttons if they exist
+                        if hasattr(win, 'undo_button'):
+                            win.undo_button.set_sensitive(can_undo)
+                        if hasattr(win, 'redo_button'):
+                            win.redo_button.set_sensitive(can_redo)
+                        
+                        # Update toolbar buttons if they exist
+                        if hasattr(win, 'undo_button_toolbar'):
+                            win.undo_button_toolbar.set_sensitive(can_undo)
+                        if hasattr(win, 'redo_button_toolbar'):
+                            win.redo_button_toolbar.set_sensitive(can_redo)
+                            
+                    except json.JSONDecodeError as je:
+                        print(f"Error parsing JSON: {je}, value was: {stack_sizes}")
+                        # Set reasonable defaults for buttons that exist
+                        self._set_default_button_states(win, True, False)
+                except Exception as inner_e:
+                    print(f"Inner error processing JS result: {inner_e}")
+                    # Set reasonable defaults
+                    self._set_default_button_states(win, True, False)
+        except Exception as e:
+            print(f"Error getting stack sizes: {e}")
+            # Set reasonable defaults in case of error
+            self._set_default_button_states(win, True, False)
+
+    # Add this helper method to safely set button states
+    def _set_default_button_states(self, win, undo_state, redo_state):
+        """Safely set button states with attribute checking"""
+        # Update headerbar buttons if they exist
+        if hasattr(win, 'undo_button'):
+            win.undo_button.set_sensitive(undo_state)
+        if hasattr(win, 'redo_button'):
+            win.redo_button.set_sensitive(redo_state)
         
-        # Set up message handlers
-        self.setup_webview_message_handlers(win)
-        
-        # Set up key controller for shortcuts
-        win.key_controller = Gtk.EventControllerKey.new()
-        win.key_controller.connect("key-pressed", self.on_webview_key_pressed)
-        win.webview.add_controller(win.key_controller)
-        
-        win.webview.load_html(self.get_initial_html(), None)
-        content_box.append(win.webview)
-        
-        # Find bar with revealer
-        win.find_bar = self.create_find_bar(win)
-        content_box.append(win.find_bar)
-        
-        # Create table toolbar with revealer (hidden by default)
-        win.table_toolbar_revealer = Gtk.Revealer()
-        win.table_toolbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_UP)
-        win.table_toolbar_revealer.set_transition_duration(250)
-        win.table_toolbar_revealer.set_reveal_child(False)  # Hidden by default
-        
-        # Create and add table toolbar
-        win.table_toolbar = self.create_table_toolbar(win)
-        win.table_toolbar_revealer.set_child(win.table_toolbar)
-        content_box.append(win.table_toolbar_revealer)
-        
-        # Set the content box as the content of the ToolbarView
-        win.toolbar_view.set_content(content_box)
-        
-        # Create statusbar with revealer
-        win.statusbar_revealer = Gtk.Revealer()
-        win.statusbar_revealer.add_css_class("flat-header")
-        win.statusbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_UP)
-        win.statusbar_revealer.set_transition_duration(250)
-        win.statusbar_revealer.set_reveal_child(True)  # Visible by default
-        
-        # Create statusbar content
-        statusbar_box = self.setup_statusbar_content(win)
-        win.statusbar_revealer.set_child(statusbar_box)
-        
-        # Add the statusbar revealer as a bottom bar in the ToolbarView
-        win.toolbar_view.add_bottom_bar(win.statusbar_revealer)
-        
-        # Set the ToolbarView as the window content
-        win.set_content(win.toolbar_view)
-        
-        # Add actions
-        self.setup_window_actions(win)
-        
-        win.connect("close-request", self.on_window_close_request)
-        
-        # Add to windows list
-        self.windows.append(win)
-        
-        return win
+        # Update toolbar buttons if they exist
+        if hasattr(win, 'undo_button_toolbar'):
+            win.undo_button_toolbar.set_sensitive(undo_state)
+        if hasattr(win, 'redo_button_toolbar'):
+            win.redo_button_toolbar.set_sensitive(redo_state)
+
+
         
 def main():
     app = WebkitWordApp()

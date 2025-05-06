@@ -5,6 +5,7 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gdk, GLib, Gio, Pango, PangoCairo
     
+
 def on_webview_key_pressed(self, controller, keyval, keycode, state):
     """Handle key press events on the webview"""
     win = None
@@ -19,6 +20,21 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
     ctrl = (state & Gdk.ModifierType.CONTROL_MASK) != 0
     shift = (state & Gdk.ModifierType.SHIFT_MASK) != 0
     alt = (state & Gdk.ModifierType.ALT_MASK) != 0
+
+    # Alt shortcuts for toolbar toggles
+    if alt and not ctrl and not shift:
+        if keyval == Gdk.KEY_f:
+            self.toggle_file_toolbar(win)
+            return True
+        elif keyval == Gdk.KEY_h:
+            self.toggle_headerbar(win)
+            return True
+        elif keyval == Gdk.KEY_s:
+            self.toggle_statusbar(win)
+            return True
+        elif keyval == Gdk.KEY_t: 
+            self.toggle_format_toolbar(win)
+            return True
 
     if ctrl and alt:
         if keyval >= Gdk.KEY_0 and keyval <= Gdk.KEY_6:
@@ -61,10 +77,10 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
             return True
             
         elif keyval == Gdk.KEY_z and not shift:
-            self.on_undo_clicked(win, None)
+            self.on_undo_shortcut(win)
             return True
         elif (keyval == Gdk.KEY_z and shift) or keyval == Gdk.KEY_y:
-            self.on_redo_clicked(win, None)
+            self.on_redo_shortcut(win)
             return True
         elif keyval == Gdk.KEY_x and not shift:
             self.on_cut_clicked(win, None)
@@ -84,7 +100,7 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
             return True
 
         elif keyval == Gdk.KEY_a:
-            self.on_select_all_clicked(win)
+            self.on_select_all_clicked(win, None)
             return True
             
         elif keyval == Gdk.KEY_b:
@@ -105,7 +121,6 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
             self.on_subscript_shortcut(win)
             return True  
 
-            
         elif keyval == Gdk.KEY_l:
             self.on_align_left_shortcut(win)
             return True
@@ -130,16 +145,7 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
             return True
 
     if ctrl and shift and not alt:
-        if keyval == Gdk.KEY_F:
-            self.toggle_file_toolbar(win)
-            return True
-        elif keyval == Gdk.KEY_S:
-            self.toggle_statusbar(win)
-            return True
-        elif keyval == Gdk.KEY_H:
-            self.toggle_headerbar(win)
-            return True
-        elif keyval == Gdk.KEY_W:
+        if keyval == Gdk.KEY_W:
             self.on_close_others_shortcut(win)
             return True
         elif keyval == Gdk.KEY_X:
@@ -181,7 +187,6 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
     self.setup_scroll_zoom(win)
     # Let other key events propagate normally
     return False
-    
 ###################### Shortcut Related Methods    
 # Find and Replace shortcuts
 def on_replace_shortcut(self, win, *args):
