@@ -556,16 +556,11 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # If the button is provided (from headerbar), update its state
         if len(args) > 0 and isinstance(args[0], Gtk.ToggleButton):
             toggle_button = args[0]
-            # Temporarily block signal handler to prevent recursion
-            handlers = toggle_button.list_signal_handlers()
-            for handler_id in handlers:
-                toggle_button.handler_block(handler_id)
-            
-            toggle_button.set_active(not is_revealed)
-            
-            # Unblock the handlers
-            for handler_id in handlers:
-                toggle_button.handler_unblock(handler_id)
+            # Block the handler if we have its ID
+            if hasattr(toggle_button, 'toggle_handler_id'):
+                toggle_button.handler_block(toggle_button.toggle_handler_id)
+                toggle_button.set_active(not is_revealed)
+                toggle_button.handler_unblock(toggle_button.toggle_handler_id)
         
         return True
         
@@ -6905,13 +6900,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Add the file group to the toolbar
         file_toolbar.append(file_group)
         
-        # Add a separator
-        separator1 = Gtk.Separator(orientation=Gtk.Orientation.VERTICAL)
-        separator1.add_css_class("toolbar-separator")
-        separator1.set_margin_start(4)
-        separator1.set_margin_end(4)
-        file_toolbar.append(separator1)
-        
         # --- Edit Operations Group ---
         edit_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         edit_group.add_css_class("linked")
@@ -6950,13 +6938,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Add the edit group to the toolbar
         file_toolbar.append(edit_group)
         
-        # Add another separator
-        separator2 = Gtk.Separator(orientation=Gtk.Orientation.VERTICAL)
-        separator2.add_css_class("toolbar-separator")
-        separator2.set_margin_start(4)
-        separator2.set_margin_end(4)
-        file_toolbar.append(separator2)
-        
         # --- Undo/Redo Group ---
         undo_redo_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         undo_redo_group.add_css_class("linked")
@@ -6984,13 +6965,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Add the undo/redo group to the toolbar
         file_toolbar.append(undo_redo_group)
-        
-        # Add another separator
-        separator3 = Gtk.Separator(orientation=Gtk.Orientation.VERTICAL)
-        separator3.add_css_class("toolbar-separator")
-        separator3.set_margin_start(4)
-        separator3.set_margin_end(4)
-        file_toolbar.append(separator3)
         
         # --- Print/Find Group ---
         print_find_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
