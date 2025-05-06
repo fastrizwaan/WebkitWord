@@ -644,7 +644,15 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
 
 
-
+                        
+    def toggle_file_toolbar(self, win, *args):
+        """Toggle the visibility of the file toolbar with animation"""
+        is_revealed = win.toolbar_revealer.get_reveal_child()
+        win.toolbar_revealer.set_reveal_child(not is_revealed)
+        status = "hidden" if is_revealed else "shown"
+        win.statusbar.set_text(f"File Toolbar {status}")
+        return True         
+             
 
     def toggle_statusbar(self, win, *args):
         """Toggle the visibility of the statusbar with animation"""
@@ -661,14 +669,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         status = "hidden" if is_revealed else "shown"
         win.statusbar.set_text(f"Headerbar {status}")
         return True
-
-    def toggle_file_toolbar(self, win, *args):
-        """Toggle the visibility of the file toolbar with animation"""
-        is_revealed = win.toolbar_revealer.get_reveal_child()
-        win.toolbar_revealer.set_reveal_child(not is_revealed)
-        status = "hidden" if is_revealed else "shown"
-        win.statusbar.set_text(f"Toolbar {status}")
-        return True     
 
     def on_close_shortcut(self, win, *args):
         """Handle Ctrl+W shortcut to close current window"""
@@ -2323,7 +2323,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
             
     def on_preferences(self, action, param):
-        """Show preferences dialog with enhanced UI visibility options"""
+        """Show preferences dialog"""
         if not self.windows:
             return
                 
@@ -2350,6 +2350,13 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         content_box.set_margin_start(24)
         content_box.set_margin_end(24)
         
+        # Add settings UI
+        header = Gtk.Label()
+        header.set_markup("<b>Editor Settings</b>")
+        header.set_halign(Gtk.Align.START)
+        header.set_margin_bottom(12)
+        content_box.append(header)
+        
         # Show/Hide UI elements section
         ui_header = Gtk.Label()
         ui_header.set_markup("<b>User Interface</b>")
@@ -2357,42 +2364,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         ui_header.set_margin_bottom(12)
         ui_header.set_margin_top(24)
         content_box.append(ui_header)
-        
-        # Show Headerbar option
-        headerbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        headerbar_box.set_margin_start(12)
-        headerbar_box.set_margin_top(12)
-        
-        headerbar_label = Gtk.Label(label="Show Headerbar:")
-        headerbar_label.set_halign(Gtk.Align.START)
-        headerbar_label.set_hexpand(True)
-        
-        headerbar_switch = Gtk.Switch()
-        headerbar_switch.set_active(active_win.headerbar_revealer.get_reveal_child())
-        headerbar_switch.set_valign(Gtk.Align.CENTER)
-        headerbar_switch.connect("state-set", lambda sw, state: active_win.headerbar_revealer.set_reveal_child(state))
-        
-        headerbar_box.append(headerbar_label)
-        headerbar_box.append(headerbar_switch)
-        content_box.append(headerbar_box)
-        
-        # Show Toolbar option
-        toolbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        toolbar_box.set_margin_start(12)
-        toolbar_box.set_margin_top(12)
-        
-        toolbar_label = Gtk.Label(label="Show Toolbar:")
-        toolbar_label.set_halign(Gtk.Align.START)
-        toolbar_label.set_hexpand(True)
-        
-        toolbar_switch = Gtk.Switch()
-        toolbar_switch.set_active(active_win.toolbar_revealer.get_reveal_child())
-        toolbar_switch.set_valign(Gtk.Align.CENTER)
-        toolbar_switch.connect("state-set", lambda sw, state: active_win.toolbar_revealer.set_reveal_child(state))
-        
-        toolbar_box.append(toolbar_label)
-        toolbar_box.append(toolbar_switch)
-        content_box.append(toolbar_box)
         
         # Show Statusbar option
         statusbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
@@ -2412,7 +2383,25 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         statusbar_box.append(statusbar_switch)
         content_box.append(statusbar_box)
         
-        # Auto-save section
+        # Show Headerbar option
+        headerbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        headerbar_box.set_margin_start(12)
+        headerbar_box.set_margin_top(12)
+        
+        headerbar_label = Gtk.Label(label="Show Headerbar:")
+        headerbar_label.set_halign(Gtk.Align.START)
+        headerbar_label.set_hexpand(True)
+        
+        headerbar_switch = Gtk.Switch()
+        headerbar_switch.set_active(active_win.headerbar_revealer.get_reveal_child())
+        headerbar_switch.set_valign(Gtk.Align.CENTER)
+        headerbar_switch.connect("state-set", lambda sw, state: active_win.headerbar_revealer.set_reveal_child(state))
+        
+        headerbar_box.append(headerbar_label)
+        headerbar_box.append(headerbar_switch)
+        content_box.append(headerbar_box)
+        
+        # Auto-save toggle
         auto_save_section = Gtk.Label()
         auto_save_section.set_markup("<b>Auto Save</b>")
         auto_save_section.set_halign(Gtk.Align.START)
@@ -3647,11 +3636,194 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         self.setup_spacing_actions(win)
 
 
-
+    def on_preferences(self, action, param):
+        """Show preferences dialog with enhanced UI visibility options"""
+        if not self.windows:
+            return
+                
+        # Find the active window instead of just using the first window
+        active_win = None
+        for win in self.windows:
+            if win.is_active():
+                active_win = win
+                break
+        
+        # If no active window found, use the first one as fallback
+        if not active_win:
+            active_win = self.windows[0]
+                
+        # Create dialog
+        dialog = Adw.Dialog.new()
+        dialog.set_title("Preferences")
+        dialog.set_content_width(450)
+        
+        # Create content
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+        
+        # Show/Hide UI elements section
+        ui_header = Gtk.Label()
+        ui_header.set_markup("<b>User Interface</b>")
+        ui_header.set_halign(Gtk.Align.START)
+        ui_header.set_margin_bottom(12)
+        ui_header.set_margin_top(24)
+        content_box.append(ui_header)
+        
+        # Show Headerbar option
+        headerbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        headerbar_box.set_margin_start(12)
+        headerbar_box.set_margin_top(12)
+        
+        headerbar_label = Gtk.Label(label="Show Headerbar:")
+        headerbar_label.set_halign(Gtk.Align.START)
+        headerbar_label.set_hexpand(True)
+        
+        headerbar_switch = Gtk.Switch()
+        headerbar_switch.set_active(active_win.headerbar_revealer.get_reveal_child())
+        headerbar_switch.set_valign(Gtk.Align.CENTER)
+        headerbar_switch.connect("state-set", lambda sw, state: active_win.headerbar_revealer.set_reveal_child(state))
+        
+        headerbar_box.append(headerbar_label)
+        headerbar_box.append(headerbar_switch)
+        content_box.append(headerbar_box)
+        
+        # Show Toolbar option
+        toolbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        toolbar_box.set_margin_start(12)
+        toolbar_box.set_margin_top(12)
+        
+        toolbar_label = Gtk.Label(label="Show Toolbar:")
+        toolbar_label.set_halign(Gtk.Align.START)
+        toolbar_label.set_hexpand(True)
+        
+        toolbar_switch = Gtk.Switch()
+        toolbar_switch.set_active(active_win.toolbar_revealer.get_reveal_child())
+        toolbar_switch.set_valign(Gtk.Align.CENTER)
+        toolbar_switch.connect("state-set", lambda sw, state: active_win.toolbar_revealer.set_reveal_child(state))
+        
+        toolbar_box.append(toolbar_label)
+        toolbar_box.append(toolbar_switch)
+        content_box.append(toolbar_box)
+        
+        # Show Statusbar option
+        statusbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        statusbar_box.set_margin_start(12)
+        statusbar_box.set_margin_top(12)
+        
+        statusbar_label = Gtk.Label(label="Show Statusbar:")
+        statusbar_label.set_halign(Gtk.Align.START)
+        statusbar_label.set_hexpand(True)
+        
+        statusbar_switch = Gtk.Switch()
+        statusbar_switch.set_active(active_win.statusbar_revealer.get_reveal_child())
+        statusbar_switch.set_valign(Gtk.Align.CENTER)
+        statusbar_switch.connect("state-set", lambda sw, state: active_win.statusbar_revealer.set_reveal_child(state))
+        
+        statusbar_box.append(statusbar_label)
+        statusbar_box.append(statusbar_switch)
+        content_box.append(statusbar_box)
+        
+        # Auto-save section
+        auto_save_section = Gtk.Label()
+        auto_save_section.set_markup("<b>Auto Save</b>")
+        auto_save_section.set_halign(Gtk.Align.START)
+        auto_save_section.set_margin_bottom(12)
+        auto_save_section.set_margin_top(24)
+        content_box.append(auto_save_section)
+        
+        auto_save_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        auto_save_box.set_margin_start(12)
+        
+        auto_save_label = Gtk.Label(label="Auto Save:")
+        auto_save_label.set_halign(Gtk.Align.START)
+        auto_save_label.set_hexpand(True)
+        
+        auto_save_switch = Gtk.Switch()
+        auto_save_switch.set_active(active_win.auto_save_enabled)
+        auto_save_switch.set_valign(Gtk.Align.CENTER)
+        
+        auto_save_box.append(auto_save_label)
+        auto_save_box.append(auto_save_switch)
+        content_box.append(auto_save_box)
+        
+        # Interval settings
+        interval_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        interval_box.set_margin_start(12)
+        interval_box.set_margin_top(12)
+        
+        interval_label = Gtk.Label(label="Auto-save Interval (seconds):")
+        interval_label.set_halign(Gtk.Align.START)
+        interval_label.set_hexpand(True)
+        
+        adjustment = Gtk.Adjustment(
+            value=active_win.auto_save_interval,
+            lower=10,
+            upper=600,
+            step_increment=10
+        )
+        
+        spinner = Gtk.SpinButton()
+        spinner.set_adjustment(adjustment)
+        spinner.set_valign(Gtk.Align.CENTER)
+        
+        interval_box.append(interval_label)
+        interval_box.append(spinner)
+        content_box.append(interval_box)
+        
+        # Dialog buttons
+        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        button_box.set_halign(Gtk.Align.END)
+        button_box.set_margin_top(24)
+        
+        cancel_button = Gtk.Button(label="Cancel")
+        cancel_button.connect("clicked", lambda btn: dialog.close())
+        button_box.append(cancel_button)
+        
+        ok_button = Gtk.Button(label="OK")
+        ok_button.add_css_class("suggested-action")
+        ok_button.connect("clicked", lambda btn: self.save_preferences(
+            dialog, active_win, auto_save_switch.get_active(), spinner.get_value_as_int()
+        ))
+        button_box.append(ok_button)
+        
+        content_box.append(button_box)
+        
+        # Important: Store a reference to the dialog in the window
+        active_win.preferences_dialog = dialog
+        
+        # Connect to the closed signal to clean up the reference
+        dialog.connect("closed", lambda d: self.on_preferences_dialog_closed(active_win))
+        
+        # Set dialog content and show
+        dialog.set_child(content_box)
+        dialog.present(active_win)
 ############# /Create Window
-    
-            
+    def toggle_headerbar(self, win, *args):
+        """Toggle the visibility of the headerbar with animation"""
+        is_revealed = win.headerbar_revealer.get_reveal_child()
+        win.headerbar_revealer.set_reveal_child(not is_revealed)
+        status = "hidden" if is_revealed else "shown"
+        win.statusbar.set_text(f"Headerbar {status}")
+        return True
 
+    def toggle_file_toolbar(self, win, *args):
+        """Toggle the visibility of the file toolbar with animation"""
+        is_revealed = win.toolbar_revealer.get_reveal_child()
+        win.toolbar_revealer.set_reveal_child(not is_revealed)
+        status = "hidden" if is_revealed else "shown"
+        win.statusbar.set_text(f"Toolbar {status}")
+        return True         
+            
+    def toggle_statusbar(self, win, *args):
+        """Toggle the visibility of the statusbar with animation"""
+        is_revealed = win.statusbar_revealer.get_reveal_child()
+        win.statusbar_revealer.set_reveal_child(not is_revealed)
+        if not is_revealed:
+            win.statusbar.set_text("Statusbar shown")
+        return True
         
 ##############
     def setup_paragraph_style_dropdown(self, win):
@@ -6937,7 +7109,180 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Keep focus on webview
         win.webview.grab_focus()
+################
+    def setup_menu_button(self, win):
+        """Create a menu button on the left side of the headerbar that shows common actions"""
+        # Create a menu button with an arrow icon
+        menu_button = Gtk.MenuButton()
+        menu_button.set_icon_name("more-small-symbolic")  # Right arrow icon
+        menu_button.set_tooltip_text("Show Actions Menu")
+        menu_button.add_css_class("flat")
         
+        # Create popover for the menu button
+        popover = Gtk.Popover()
+        popover.set_autohide(True)
+        
+        # Create a box for the popover content
+        popover_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        popover_box.set_margin_top(6)
+        popover_box.set_margin_bottom(6)
+        popover_box.set_margin_start(6)
+        popover_box.set_margin_end(6)
+        
+        
+        # Edit operations
+        edit_label = Gtk.Label()
+        edit_label.set_markup("<b>Edit Operations</b>")
+        edit_label.set_halign(Gtk.Align.START)
+        edit_label.set_margin_bottom(4)
+        edit_label.set_margin_top(4)
+        popover_box.append(edit_label)
+        
+        # Edit operations buttons
+        edit_grid = Gtk.Grid()
+        edit_grid.set_column_spacing(2)
+        edit_grid.set_row_spacing(2)
+        
+        # Select All button
+        select_all_button = Gtk.Button(label="Select All")
+        select_all_button.set_icon_name("edit-select-all-symbolic")
+        select_all_button.connect("clicked", lambda btn: self.on_select_all_clicked(win, btn))
+        select_all_button.set_hexpand(True)
+        edit_grid.attach(select_all_button, 0, 0, 1, 1)
+        
+        # Cut button
+        cut_button = Gtk.Button(label="Cut")
+        cut_button.set_icon_name("edit-cut-symbolic")
+        cut_button.connect("clicked", lambda btn: self.on_cut_clicked(win, btn))
+        cut_button.set_hexpand(True)
+        edit_grid.attach(cut_button, 0, 1, 1, 1)
+        
+        # Copy button
+        copy_button = Gtk.Button(label="Copy")
+        copy_button.set_icon_name("edit-copy-symbolic")
+        copy_button.connect("clicked", lambda btn: self.on_copy_clicked(win, btn))
+        copy_button.set_hexpand(True)
+        edit_grid.attach(copy_button, 0, 2, 1, 1)
+        
+        # Paste button
+        paste_button = Gtk.Button(label="Paste")
+        paste_button.set_icon_name("edit-paste-symbolic")
+        paste_button.connect("clicked", lambda btn: self.on_paste_clicked(win, btn))
+        paste_button.set_hexpand(True)
+        edit_grid.attach(paste_button, 0, 3, 1, 1)
+        
+        popover_box.append(edit_grid)
+        
+        # Separator
+        separator2 = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        separator2.set_margin_top(6)
+        separator2.set_margin_bottom(6)
+        popover_box.append(separator2)
+        
+        # Tools operations
+        tools_label = Gtk.Label()
+        tools_label.set_markup("<b>Tools</b>")
+        tools_label.set_halign(Gtk.Align.START)
+        tools_label.set_margin_bottom(4)
+        tools_label.set_margin_top(4)
+        popover_box.append(tools_label)
+        
+        # Tools operations buttons
+        tools_grid = Gtk.Grid()
+        tools_grid.set_column_spacing(2)
+        tools_grid.set_row_spacing(2)
+        
+        # Undo button
+        undo_button = Gtk.Button(label="Undo")
+        undo_button.set_icon_name("edit-undo-symbolic")
+        undo_button.connect("clicked", lambda btn: self.on_undo_clicked(win, btn))
+        undo_button.set_hexpand(True)
+        tools_grid.attach(undo_button, 0, 0, 1, 1)
+        
+        # Redo button
+        redo_button = Gtk.Button(label="Redo")
+        redo_button.set_icon_name("edit-redo-symbolic")
+        redo_button.connect("clicked", lambda btn: self.on_redo_clicked(win, btn))
+        redo_button.set_hexpand(True)
+        tools_grid.attach(redo_button, 0, 1, 1, 1)
+        
+        # Print button
+        print_button = Gtk.Button(label="Print")
+        print_button.set_icon_name("document-print-symbolic")
+        print_button.connect("clicked", lambda btn: self.on_print_clicked(win, btn) if hasattr(self, "on_print_clicked") else None)
+        print_button.set_hexpand(True)
+        tools_grid.attach(print_button, 0, 2, 1, 1)
+        
+        # Find button
+        find_button = Gtk.Button(label="Find & Replace")
+        find_button.set_icon_name("edit-find-replace-symbolic")
+        find_button.connect("clicked", lambda btn: self.on_find_clicked(win))
+        find_button.set_hexpand(True)
+        tools_grid.attach(find_button, 0, 3, 1, 1)
+        
+        popover_box.append(tools_grid)
+        
+        # Set the box as the child of the popover
+        popover.set_child(popover_box)
+        
+        # Connect the popover to the menu button
+        menu_button.set_popover(popover)
+        
+        # Add the menu button to the headerbar (at the start)
+        win.headerbar.pack_start(menu_button)
+        
+        return menu_button        
+
+    def setup_headerbar_content(self, win):
+        """Create improved headerbar content with essential operations"""
+        win.headerbar.set_margin_top(0)
+        win.headerbar.set_margin_bottom(0)
+        
+        # --- LEFT SIDE OF HEADERBAR ---
+        
+        
+        # File operations group (New, Open, Save, Save As)
+        file_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        file_group.add_css_class("linked")  # Apply linked styling
+        
+        # New button
+        new_button = Gtk.Button(icon_name="document-new-symbolic")
+        new_button.set_tooltip_text("New Document in New Window")
+        new_button.connect("clicked", lambda btn: self.on_new_clicked(win, btn))
+        new_button.set_size_request(40, 36)
+        
+        # Open button
+        open_button = Gtk.Button(icon_name="document-open-symbolic")
+        open_button.set_tooltip_text("Open File in New Window")
+        open_button.connect("clicked", lambda btn: self.on_open_clicked(win, btn))
+        open_button.set_size_request(40, 36)
+        
+        # Save button
+        save_button = Gtk.Button(icon_name="document-save-symbolic")
+        save_button.set_tooltip_text("Save File")
+        save_button.connect("clicked", lambda btn: self.on_save_clicked(win, btn))
+        save_button.set_size_request(40, 36)
+        
+        # Save As button
+        save_as_button = Gtk.Button(icon_name="document-save-as-symbolic")
+        save_as_button.set_tooltip_text("Save File As")
+        save_as_button.connect("clicked", lambda btn: self.on_save_as_clicked(win, btn))
+        save_as_button.set_size_request(40, 36)
+        
+        # Add buttons to file group
+        file_group.append(new_button)
+        file_group.append(open_button)
+        file_group.append(save_button)
+        file_group.append(save_as_button)
+        
+        # Add file group to headerbar
+        win.headerbar.pack_start(file_group)
+        
+        # Add our slide-out menu button first
+        self.setup_menu_button(win)
+        # ... Rest of original method remains unchanged ...
+##########
+
         
 def main():
     app = WebkitWordApp()
