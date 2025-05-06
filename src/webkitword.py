@@ -3308,7 +3308,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
 ############# Create Window
     def create_window(self):
-        """Create a new window with all initialization using Adw.ToolbarView"""
+        """Create a new window with separate headerbar and toolbar in ToolbarView"""
         win = Adw.ApplicationWindow(application=self)
         
         # Set window properties
@@ -3326,9 +3326,16 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Create the header bar
         win.headerbar = Adw.HeaderBar()
-        #win.headerbar.add_css_class("flat-header")
         win.headerbar.set_margin_bottom(0)  # Ensure no bottom margin
 
+        # Create a revealer for the header bar
+        win.headerbar_revealer = Gtk.Revealer()
+        win.headerbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
+        win.headerbar_revealer.set_transition_duration(250)
+        win.headerbar_revealer.set_reveal_child(True)  # Visible by default
+        win.headerbar_revealer.set_child(win.headerbar)
+
+        # Set up the headerbar content
         self.setup_headerbar_content(win)
         
         # Create toolbar revealer for smooth show/hide
@@ -3348,7 +3355,211 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.toolbars_wrapbox.set_child_spacing(4)
         win.toolbars_wrapbox.set_line_spacing(4)
         
-    # Store the handlers for blocking
+        # Add toolbar content (like formatting buttons, etc.)
+        self.setup_toolbar_content(win)
+        
+        # Set toolbar WrapBox as the child of toolbar revealer
+        win.toolbar_revealer.set_child(win.toolbars_wrapbox)
+        
+        # Set the toolbar revealer and headerbar revealer as top bars in the ToolbarView
+        win.toolbar_view.add_top_bar(win.headerbar_revealer)
+        win.toolbar_view.add_top_bar(win.toolbar_revealer)
+        
+        # Create content area
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        content_box.set_vexpand(True)
+        content_box.set_hexpand(True)
+        
+        # Create webview
+        win.webview = WebKit.WebView()
+        win.webview.set_vexpand(True)
+        win.webview.set_hexpand(True) 
+        win.webview.load_html(self.get_editor_html(), None)
+        settings = win.webview.get_settings()
+        try:
+            settings.set_enable_developer_extras(True)
+        except:
+            pass
+        
+        # Set up message handlers
+        self.setup_webview_message_handlers(win)
+        
+        # Set up key controller for shortcuts
+        win.key_controller = Gtk.EventControllerKey.new()
+        win.key_controller.connect("key-pressed", self.on_webview_key_pressed)
+        win.webview.add_controller(win.key_controller)
+        
+        win.webview.load_html(self.get_initial_html(), None)
+        content_box.append(win.webview)
+        
+        # Find bar with revealer
+        win.find_bar = self.create_find_bar(win)
+        content_box.append(win.find_bar)
+        
+        # Create table toolbar with revealer (hidden by default)
+        win.table_toolbar_revealer = Gtk.Revealer()
+        win.table_toolbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_UP)
+        win.table_toolbar_revealer.set_transition_duration(250)
+        win.table_toolbar_revealer.set_reveal_child(False)  # Hidden by default
+        
+        # Create and add table toolbar
+        win.table_toolbar = self.create_table_toolbar(win)
+        win.table_toolbar_revealer.set_child(win.table_toolbar)
+        content_box.append(win.table_toolbar_revealer)
+        
+        # Set the content box as the content of the ToolbarView
+        win.toolbar_view.set_content(content_box)
+        
+        # Create statusbar with revealer
+        win.statusbar_revealer = Gtk.Revealer()
+        win.statusbar_revealer.add_css_class("flat-header")
+        win.statusbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_UP)
+        win.statusbar_revealer.set_transition_duration(250)
+        win.statusbar_revealer.set_reveal_child(True)  # Visible by default
+        
+        # Create statusbar content
+        statusbar_box = self.setup_statusbar_content(win)
+        win.statusbar_revealer.set_child(statusbar_box)
+        
+        # Add the statusbar revealer as a bottom bar in the ToolbarView
+        win.toolbar_view.add_bottom_bar(win.statusbar_revealer)
+        
+        # Set the ToolbarView as the window content
+        win.set_content(win.toolbar_view)
+        
+        # Add actions
+        self.setup_window_actions(win)
+        
+        win.connect("close-request", self.on_window_close_request)
+        
+        # Add to windows list
+        self.windows.append(win)
+        
+        return win
+
+
+    def setup_webview_message_handlers(self, win):
+        """Set up the WebKit message handlers"""
+        try:
+            user_content_manager = win.webview.get_user_content_manager()
+            user_content_manager.register_script_message_handler("contentChanged")
+            user_content_manager.connect("script-message-received::contentChanged", 
+                                        lambda mgr, res: self.on_content_changed(win, mgr, res))
+            
+            # Add handler for formatting changes
+            user_content_manager.register_script_message_handler("formattingChanged")
+            user_content_manager.connect("script-message-received::formattingChanged", 
+                                        lambda mgr, res: self.on_formatting_changed(win, mgr, res))
+            
+            # Table-related message handlers
+            user_content_manager.register_script_message_handler("tableClicked")
+            user_content_manager.register_script_message_handler("tableDeleted")
+            user_content_manager.register_script_message_handler("tablesDeactivated")
+            
+            user_content_manager.connect("script-message-received::tableClicked", 
+                                        lambda mgr, res: self.on_table_clicked(win, mgr, res))
+            user_content_manager.connect("script-message-received::tableDeleted", 
+                                        lambda mgr, res: self.on_table_deleted(win, mgr, res))
+            user_content_manager.connect("script-message-received::tablesDeactivated", 
+                                        lambda mgr, res: self.on_tables_deactivated(win, mgr, res))
+        except:
+            print("Warning: Could not set up JavaScript message handlers")
+
+
+    def setup_statusbar_content(self, win):
+        """Create the statusbar content"""
+        # Create a box for the statusbar 
+        statusbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        statusbar_box.set_margin_start(10)
+        statusbar_box.set_margin_end(10)
+        statusbar_box.set_margin_top(0)
+        statusbar_box.set_margin_bottom(4)
+        
+        # Create the text label
+        win.statusbar = Gtk.Label(label="Ready")
+        win.statusbar.set_halign(Gtk.Align.START)
+        win.statusbar.set_hexpand(True)
+        statusbar_box.append(win.statusbar)
+        
+        # Add zoom toggle button at the right side of the statusbar
+        win.zoom_toggle_button = Gtk.ToggleButton()
+        win.zoom_toggle_button.set_icon_name("org.gnome.Settings-accessibility-zoom-symbolic")
+        win.zoom_toggle_button.set_tooltip_text("Toggle Zoom Controls")
+        win.zoom_toggle_button.add_css_class("flat")
+        win.zoom_toggle_button.connect("toggled", lambda btn: self.on_zoom_toggle_clicked(win, btn))
+        statusbar_box.append(win.zoom_toggle_button)
+        
+        # Create zoom revealer for toggle functionality
+        win.zoom_revealer = Gtk.Revealer()
+        win.zoom_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_LEFT)
+        win.zoom_revealer.set_transition_duration(300)
+        win.zoom_revealer.set_reveal_child(False)  # Hidden by default
+        
+        # Create zoom control element inside the revealer
+        zoom_control_box = self.create_zoom_controls(win)
+        win.zoom_revealer.set_child(zoom_control_box)
+        
+        # Add the zoom revealer to the statusbar, before the toggle button
+        statusbar_box.insert_child_after(win.zoom_revealer, win.statusbar)
+        
+        return statusbar_box
+
+
+    def create_zoom_controls(self, win):
+        """Create zoom control elements"""
+        zoom_control_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        zoom_control_box.add_css_class("linked")  # Use linked styling for cleaner appearance
+        zoom_control_box.set_halign(Gtk.Align.END)
+        
+        # Create zoom level label
+        win.zoom_label = Gtk.Label(label="100%")
+        win.zoom_label.set_width_chars(4)  # Set a fixed width for the label
+        win.zoom_label.set_margin_start(0)
+        zoom_control_box.append(win.zoom_label)
+        
+        # Add zoom out button
+        zoom_out_button = Gtk.Button.new_from_icon_name("zoom-out-symbolic")
+        zoom_out_button.set_tooltip_text("Zoom Out")
+        zoom_out_button.connect("clicked", lambda btn: self.on_zoom_out_clicked(win))
+        zoom_control_box.append(zoom_out_button)
+        
+        # Create the slider for zoom with just marks, no text
+        adjustment = Gtk.Adjustment(
+            value=100,     # Default value
+            lower=50,      # Minimum value
+            upper=400,     # Maximum value
+            step_increment=10,  # Step size
+            page_increment=50   # Page step size
+        )
+
+        win.zoom_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=adjustment)
+        win.zoom_scale.set_draw_value(False)  # Don't show the value on the scale
+        win.zoom_scale.set_size_request(100, -1)  # Set a reasonable width
+        win.zoom_scale.set_round_digits(0)  # Round to integer values
+
+        # Add only marks without any text
+        for mark_value in [50, 100, 200, 300]:
+            win.zoom_scale.add_mark(mark_value, Gtk.PositionType.BOTTOM, None)
+
+        # Connect to our zoom handler
+        win.zoom_scale.connect("value-changed", lambda s: self.on_zoom_changed_statusbar(win, s))
+        zoom_control_box.append(win.zoom_scale)
+        
+        # Enable snapping to the marks
+        win.zoom_scale.set_has_origin(False)  # Disable highlighting from origin to current value
+
+        # Add zoom in button
+        zoom_in_button = Gtk.Button.new_from_icon_name("zoom-in-symbolic")
+        zoom_in_button.set_tooltip_text("Zoom In")
+        zoom_in_button.connect("clicked", lambda btn: self.on_zoom_in_clicked(win))
+        zoom_control_box.append(zoom_in_button)
+        
+        return zoom_control_box
+
+
+    def setup_toolbar_content(self, win):
+        """Create and set up toolbar content"""
+        # Store the handlers for blocking
         win.bold_handler_id = None
         win.italic_handler_id = None
         win.underline_handler_id = None
@@ -3359,8 +3570,258 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.font_handler_id = None
         win.font_size_handler_id = None
 
-        # ---- PARAGRAPH STYLES DROPDOWN ----
         # Create paragraph styles dropdown
+        self.setup_paragraph_style_dropdown(win)
+        
+        # Create font dropdown
+        self.setup_font_dropdown(win)
+        
+        # Create font size dropdown
+        self.setup_font_size_dropdown(win)
+        
+        # Add Paragraph, font, size linked button group
+        para_font_size_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        para_font_size_box.add_css_class("linked")
+        para_font_size_box.append(win.paragraph_style_dropdown)
+        para_font_size_box.append(win.font_dropdown)
+        para_font_size_box.append(win.font_size_dropdown)    
+                    
+        win.toolbars_wrapbox.append(para_font_size_box)
+        
+        # Add formatting controls
+        self.add_formatting_controls(win)
+        
+        # Add all the other toolbar elements
+        self.add_subscript_superscript_controls(win)
+        self.add_formatting_marks_controls(win)
+        self.add_indent_controls(win)
+        self.add_spacing_controls(win)
+        self.add_column_case_controls(win)
+        self.add_list_controls(win)
+        self.add_color_controls(win)
+        self.add_alignment_controls(win)
+        self.add_wordart_clear_controls(win)
+        self.add_insert_controls(win)
+        self.add_rtl_controls(win)
+        self.add_html_controls(win)
+
+
+    def setup_window_actions(self, win):
+        """Set up window-specific actions"""
+        # Add case change action to the window
+        case_change_action = Gio.SimpleAction.new("change-case", GLib.VariantType.new("s"))
+        case_change_action.connect("activate", lambda action, param: self.on_change_case(win, param.get_string()))
+        win.add_action(case_change_action)
+        
+        # Add toggle actions for UI elements
+        toggle_headerbar_action = Gio.SimpleAction.new("toggle-headerbar", None)
+        toggle_headerbar_action.connect("activate", lambda action, param: self.toggle_headerbar(win))
+        win.add_action(toggle_headerbar_action)
+        
+        toggle_toolbar_action = Gio.SimpleAction.new("toggle-toolbar", None)
+        toggle_toolbar_action.connect("activate", lambda action, param: self.toggle_file_toolbar(win))
+        win.add_action(toggle_toolbar_action)
+        
+        toggle_statusbar_action = Gio.SimpleAction.new("toggle-statusbar", None)
+        toggle_statusbar_action.connect("activate", lambda action, param: self.toggle_statusbar(win))
+        win.add_action(toggle_statusbar_action)
+        
+        # Set up spacing and formatting actions
+        self.setup_spacing_actions(win)
+
+
+    def on_preferences(self, action, param):
+        """Show preferences dialog with enhanced UI visibility options"""
+        if not self.windows:
+            return
+                
+        # Find the active window instead of just using the first window
+        active_win = None
+        for win in self.windows:
+            if win.is_active():
+                active_win = win
+                break
+        
+        # If no active window found, use the first one as fallback
+        if not active_win:
+            active_win = self.windows[0]
+                
+        # Create dialog
+        dialog = Adw.Dialog.new()
+        dialog.set_title("Preferences")
+        dialog.set_content_width(450)
+        
+        # Create content
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+        
+        # Show/Hide UI elements section
+        ui_header = Gtk.Label()
+        ui_header.set_markup("<b>User Interface</b>")
+        ui_header.set_halign(Gtk.Align.START)
+        ui_header.set_margin_bottom(12)
+        ui_header.set_margin_top(24)
+        content_box.append(ui_header)
+        
+        # Show Headerbar option
+        headerbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        headerbar_box.set_margin_start(12)
+        headerbar_box.set_margin_top(12)
+        
+        headerbar_label = Gtk.Label(label="Show Headerbar:")
+        headerbar_label.set_halign(Gtk.Align.START)
+        headerbar_label.set_hexpand(True)
+        
+        headerbar_switch = Gtk.Switch()
+        headerbar_switch.set_active(active_win.headerbar_revealer.get_reveal_child())
+        headerbar_switch.set_valign(Gtk.Align.CENTER)
+        headerbar_switch.connect("state-set", lambda sw, state: active_win.headerbar_revealer.set_reveal_child(state))
+        
+        headerbar_box.append(headerbar_label)
+        headerbar_box.append(headerbar_switch)
+        content_box.append(headerbar_box)
+        
+        # Show Toolbar option
+        toolbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        toolbar_box.set_margin_start(12)
+        toolbar_box.set_margin_top(12)
+        
+        toolbar_label = Gtk.Label(label="Show Toolbar:")
+        toolbar_label.set_halign(Gtk.Align.START)
+        toolbar_label.set_hexpand(True)
+        
+        toolbar_switch = Gtk.Switch()
+        toolbar_switch.set_active(active_win.toolbar_revealer.get_reveal_child())
+        toolbar_switch.set_valign(Gtk.Align.CENTER)
+        toolbar_switch.connect("state-set", lambda sw, state: active_win.toolbar_revealer.set_reveal_child(state))
+        
+        toolbar_box.append(toolbar_label)
+        toolbar_box.append(toolbar_switch)
+        content_box.append(toolbar_box)
+        
+        # Show Statusbar option
+        statusbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        statusbar_box.set_margin_start(12)
+        statusbar_box.set_margin_top(12)
+        
+        statusbar_label = Gtk.Label(label="Show Statusbar:")
+        statusbar_label.set_halign(Gtk.Align.START)
+        statusbar_label.set_hexpand(True)
+        
+        statusbar_switch = Gtk.Switch()
+        statusbar_switch.set_active(active_win.statusbar_revealer.get_reveal_child())
+        statusbar_switch.set_valign(Gtk.Align.CENTER)
+        statusbar_switch.connect("state-set", lambda sw, state: active_win.statusbar_revealer.set_reveal_child(state))
+        
+        statusbar_box.append(statusbar_label)
+        statusbar_box.append(statusbar_switch)
+        content_box.append(statusbar_box)
+        
+        # Auto-save section
+        auto_save_section = Gtk.Label()
+        auto_save_section.set_markup("<b>Auto Save</b>")
+        auto_save_section.set_halign(Gtk.Align.START)
+        auto_save_section.set_margin_bottom(12)
+        auto_save_section.set_margin_top(24)
+        content_box.append(auto_save_section)
+        
+        auto_save_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        auto_save_box.set_margin_start(12)
+        
+        auto_save_label = Gtk.Label(label="Auto Save:")
+        auto_save_label.set_halign(Gtk.Align.START)
+        auto_save_label.set_hexpand(True)
+        
+        auto_save_switch = Gtk.Switch()
+        auto_save_switch.set_active(active_win.auto_save_enabled)
+        auto_save_switch.set_valign(Gtk.Align.CENTER)
+        
+        auto_save_box.append(auto_save_label)
+        auto_save_box.append(auto_save_switch)
+        content_box.append(auto_save_box)
+        
+        # Interval settings
+        interval_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        interval_box.set_margin_start(12)
+        interval_box.set_margin_top(12)
+        
+        interval_label = Gtk.Label(label="Auto-save Interval (seconds):")
+        interval_label.set_halign(Gtk.Align.START)
+        interval_label.set_hexpand(True)
+        
+        adjustment = Gtk.Adjustment(
+            value=active_win.auto_save_interval,
+            lower=10,
+            upper=600,
+            step_increment=10
+        )
+        
+        spinner = Gtk.SpinButton()
+        spinner.set_adjustment(adjustment)
+        spinner.set_valign(Gtk.Align.CENTER)
+        
+        interval_box.append(interval_label)
+        interval_box.append(spinner)
+        content_box.append(interval_box)
+        
+        # Dialog buttons
+        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        button_box.set_halign(Gtk.Align.END)
+        button_box.set_margin_top(24)
+        
+        cancel_button = Gtk.Button(label="Cancel")
+        cancel_button.connect("clicked", lambda btn: dialog.close())
+        button_box.append(cancel_button)
+        
+        ok_button = Gtk.Button(label="OK")
+        ok_button.add_css_class("suggested-action")
+        ok_button.connect("clicked", lambda btn: self.save_preferences(
+            dialog, active_win, auto_save_switch.get_active(), spinner.get_value_as_int()
+        ))
+        button_box.append(ok_button)
+        
+        content_box.append(button_box)
+        
+        # Important: Store a reference to the dialog in the window
+        active_win.preferences_dialog = dialog
+        
+        # Connect to the closed signal to clean up the reference
+        dialog.connect("closed", lambda d: self.on_preferences_dialog_closed(active_win))
+        
+        # Set dialog content and show
+        dialog.set_child(content_box)
+        dialog.present(active_win)
+############# /Create Window
+    def toggle_headerbar(self, win, *args):
+        """Toggle the visibility of the headerbar with animation"""
+        is_revealed = win.headerbar_revealer.get_reveal_child()
+        win.headerbar_revealer.set_reveal_child(not is_revealed)
+        status = "hidden" if is_revealed else "shown"
+        win.statusbar.set_text(f"Headerbar {status}")
+        return True
+
+    def toggle_file_toolbar(self, win, *args):
+        """Toggle the visibility of the file toolbar with animation"""
+        is_revealed = win.toolbar_revealer.get_reveal_child()
+        win.toolbar_revealer.set_reveal_child(not is_revealed)
+        status = "hidden" if is_revealed else "shown"
+        win.statusbar.set_text(f"Toolbar {status}")
+        return True         
+            
+    def toggle_statusbar(self, win, *args):
+        """Toggle the visibility of the statusbar with animation"""
+        is_revealed = win.statusbar_revealer.get_reveal_child()
+        win.statusbar_revealer.set_reveal_child(not is_revealed)
+        if not is_revealed:
+            win.statusbar.set_text("Statusbar shown")
+        return True
+        
+##############
+    def setup_paragraph_style_dropdown(self, win):
+        """Create paragraph styles dropdown"""
         win.paragraph_style_dropdown = Gtk.DropDown()
         win.paragraph_style_dropdown.set_tooltip_text("Paragraph Style")
         win.paragraph_style_dropdown.set_focus_on_click(False)
@@ -3381,8 +3842,9 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.paragraph_style_handler_id = win.paragraph_style_dropdown.connect(
             "notify::selected", lambda dd, param: self.on_paragraph_style_changed(win, dd))
         win.paragraph_style_dropdown.set_size_request(64, -1)
-        
-        # ---- FONT FAMILY DROPDOWN ----
+
+    def setup_font_dropdown(self, win):
+        """Create font family dropdown"""
         # Get available fonts from Pango
         font_map = PangoCairo.FontMap.get_default()
         font_families = font_map.list_families()
@@ -3395,7 +3857,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         for family in sorted_families:
             font_names.append(family)
             
-    # Create dropdown with fixed width
+        # Create dropdown with fixed width
         win.font_dropdown = Gtk.DropDown()
         win.font_dropdown.set_tooltip_text("Font Family")
         win.font_dropdown.set_focus_on_click(False)
@@ -3457,9 +3919,9 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Connect signal handler
         win.font_handler_id = win.font_dropdown.connect(
             "notify::selected", lambda dd, param: self.on_font_changed(win, dd))
-            
-            
-    # ---- FONT SIZE DROPDOWN ----
+
+    def setup_font_size_dropdown(self, win):
+        """Create font size dropdown"""
         # Create string list for font sizes
         font_sizes = Gtk.StringList()
         for size in [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 21, 22, 24, 26, 28, 32, 36, 40, 42, 44, 48, 54, 60, 66, 72, 80, 88, 96]:
@@ -3481,32 +3943,25 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Connect signal handler
         win.font_size_handler_id = win.font_size_dropdown.connect(
             "notify::selected", lambda dd, param: self.on_font_size_changed(win, dd))
-        
-        # Add Paragraph, font, size linked button group
-        para_font_size_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        para_font_size_box.add_css_class("linked")
-        para_font_size_box.append(win.paragraph_style_dropdown)
-        para_font_size_box.append(win.font_dropdown)
-        para_font_size_box.append(win.font_size_dropdown)    
-                    
-        win.toolbars_wrapbox.append(para_font_size_box)
-        
-        # Create first button group (basic formatting - Bold, Italics, Underline, Strikethrough)
+
+    def add_formatting_controls(self, win):
+        """Add basic text formatting controls (bold, italic, underline, strikethrough)"""
+        # Create button group (basic formatting - Bold, Italics, Underline, Strikethrough)
         bius_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         bius_group.set_margin_start(0)
         bius_group.set_margin_end(0)
         
         # Bold button
         win.bold_button = Gtk.ToggleButton(icon_name="format-text-bold-symbolic")
-        win.bold_button.set_tooltip_text("Bold")
+        win.bold_button.set_tooltip_text("Bold (Ctrl+B)")
         win.bold_button.set_focus_on_click(False)
         win.bold_button.set_size_request(40, 36)
         win.bold_handler_id = win.bold_button.connect("toggled", lambda btn: self.on_bold_toggled(win, btn))
         bius_group.append(win.bold_button)          
 
-    # Italic button
+        # Italic button
         win.italic_button = Gtk.ToggleButton(icon_name="format-text-italic-symbolic")
-        win.italic_button.set_tooltip_text("Italic")
+        win.italic_button.set_tooltip_text("Italic (Ctrl+I)")
         win.italic_button.set_focus_on_click(False)
         win.italic_button.set_size_request(40, 36)
         win.italic_handler_id = win.italic_button.connect("toggled", lambda btn: self.on_italic_toggled(win, btn))
@@ -3514,7 +3969,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Underline button
         win.underline_button = Gtk.ToggleButton(icon_name="format-text-underline-symbolic")
-        win.underline_button.set_tooltip_text("Underline")
+        win.underline_button.set_tooltip_text("Underline (Ctrl+U)")
         win.underline_button.set_focus_on_click(False)
         win.underline_button.set_size_request(40, 36)
         win.underline_handler_id = win.underline_button.connect("toggled", lambda btn: self.on_underline_toggled(win, btn))
@@ -3530,7 +3985,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
         win.toolbars_wrapbox.append(bius_group)
 
-        # Subscript, Superscript, Paragraph, Font style shadow, color
+    def add_subscript_superscript_controls(self, win):
+        """Add subscript and superscript controls"""
         subscript_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         subscript_group.set_margin_start(0)
         subscript_group.set_margin_end(0)
@@ -3554,9 +4010,10 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
                 lambda btn: self.on_superscript_toggled(win, btn))
             subscript_group.append(win.superscript_button)
 
-        win.toolbars_wrapbox.append(subscript_group)  
-        
-    # Show formatting marks toggle button
+        win.toolbars_wrapbox.append(subscript_group) 
+
+    def add_formatting_marks_controls(self, win):
+        """Add drop cap and formatting marks controls"""
         dropcap_formatting_marks_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         dropcap_formatting_marks_group.set_margin_start(0)
         dropcap_formatting_marks_group.set_margin_end(0)
@@ -3575,6 +4032,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         win.toolbars_wrapbox.append(dropcap_formatting_marks_group)
 
+    def add_indent_controls(self, win):
+        """Add indent and outdent controls"""
         # Create linked button group for list/indent controls
         indent_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         
@@ -3595,8 +4054,10 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         indent_group.append(outdent_button)
         
         win.toolbars_wrapbox.append(indent_group)
-        
-    # --- Spacing operations group (Line Spacing, Paragraph Spacing) ---
+
+    def add_spacing_controls(self, win):
+        """Add line spacing and paragraph spacing controls"""
+        # --- Spacing operations group (Line Spacing, Paragraph Spacing) ---
         spacing_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         spacing_group.add_css_class("linked")  # Apply linked styling
         spacing_group.set_margin_start(0)
@@ -3641,8 +4102,9 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
         # Add spacing group to toolbar
         win.toolbars_wrapbox.append(spacing_group)
-        
-    # Column layout button menu
+
+    def add_column_case_controls(self, win):
+        """Add column layout and text case controls"""
         column_case_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         column_case_group.add_css_class("linked")  # Apply linked styling
         column_case_group.set_margin_start(0)
@@ -3686,8 +4148,9 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Add spacing group to toolbar
         win.toolbars_wrapbox.append(column_case_group)
-        
-    # Bullet List button
+
+    def add_list_controls(self, win):
+        """Add bullet and numbered list controls"""
         list_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         win.bullet_list_button = Gtk.ToggleButton(icon_name="view-list-bullet-symbolic")
         win.bullet_list_button.set_tooltip_text("Bullet List")
@@ -3710,7 +4173,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
         win.toolbars_wrapbox.append(list_group)
 
-        # Create second button group for colors and other formatting
+    def add_color_controls(self, win):
+        """Add text color and background color controls"""
         color_bg_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)        
         color_bg_group.set_margin_start(0)
         color_bg_group.set_margin_end(0)
@@ -3725,7 +4189,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         font_color_icon.set_margin_bottom(0)
         font_color_box.append(font_color_icon)
         
-    # Color indicator
+        # Color indicator
         win.font_color_indicator = Gtk.Box()
         win.font_color_indicator.add_css_class("color-indicator")
         win.font_color_indicator.set_size_request(16, 2)
@@ -3771,7 +4235,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         font_color_grid.set_column_homogeneous(True)
         font_color_grid.add_css_class("color-grid")
         
-    # Basic colors for text
+        # Basic colors for text
         text_colors = [
             "#000000", "#434343", "#666666", "#999999", "#b7b7b7", "#cccccc", "#d9d9d9", "#efefef", "#f3f3f3", "#ffffff",
             "#980000", "#ff0000", "#ff9900", "#ffff00", "#00ff00", "#00ffff", "#4a86e8", "#0000ff", "#9900ff", "#ff00ff",
@@ -3813,7 +4277,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.font_color_button.set_child(font_color_box)
         win.font_color_button.set_popover(font_color_popover)
         
-    # Connect the click handler to apply the current color
+        # Connect the click handler to apply the current color
         win.font_color_button.connect("clicked", lambda btn: self.on_font_color_button_clicked(win))
         color_bg_group.append(win.font_color_button)
         
@@ -3846,7 +4310,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         bg_color_box_menu.set_margin_top(6)
         bg_color_box_menu.set_margin_bottom(6)
         
-    # Add "Automatic" option at the top
+        # Add "Automatic" option at the top
         bg_automatic_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         bg_automatic_row.set_margin_bottom(0)
         bg_automatic_icon = Gtk.Image.new_from_icon_name("edit-undo-symbolic")
@@ -3888,7 +4352,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
         bg_color_box_menu.append(bg_color_grid)
         
-    # Add "More Colors..." button
+        # Add "More Colors..." button
         bg_more_colors_button = Gtk.Button(label="More Colors...")
         bg_more_colors_button.set_margin_top(6)
         bg_more_colors_button.connect("clicked", lambda btn: self.on_more_bg_colors_clicked(win, bg_color_popover))
@@ -3909,8 +4373,404 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.bg_color_button.connect("clicked", lambda btn: self.on_bg_color_button_clicked(win))
         color_bg_group.append(win.bg_color_button)
         
-        win.toolbars_wrapbox.append(color_bg_group)
+        win.toolbars_wrapbox.append(color_bg_group)      
+        
+        
+        
+        
+####################    #    
+    def on_font_color_button_clicked(self, win):
+        """Handle font color button click (apply current color)"""
+        # Get the current color from the indicator
+        style_context = win.font_color_indicator.get_style_context()
+        css_provider = None
+        
+        # Try to find the CSS provider for the color
+        for provider in style_context.list_providers():
+            css_provider = provider
+            break
+        
+        if css_provider:
+            # Get CSS data and extract color
+            css_data = css_provider.to_string()
+            import re
+            color_match = re.search(r'rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d\.]+)\)', css_data)
+            if color_match:
+                r, g, b, a = map(float, color_match.groups())
+                # Convert to 0-1 range for RGBA
+                r /= 255
+                g /= 255
+                b /= 255
+                
+                # Create color object
+                color = Gdk.RGBA()
+                color.red = r
+                color.green = g
+                color.blue = b
+                color.alpha = float(a)
+                
+                # Apply color to selection
+                self.apply_font_color(win, color)
+            else:
+                # No color set or transparent
+                win.statusbar.set_text("No color selected")
+        else:
+            win.statusbar.set_text("No color selected")
 
+    def on_font_color_selected(self, win, color_hex, popover):
+        """Handle font color selection from the grid"""
+        # Parse color
+        color = Gdk.RGBA()
+        color.parse(color_hex)
+        
+        # Apply to the indicator
+        self.set_box_color(win.font_color_indicator, color)
+        
+        # Apply to selection
+        self.apply_font_color(win, color)
+        
+        # Close popover
+        popover.popdown()
+        
+        # Update status
+        win.statusbar.set_text(f"Text color set to {color_hex}")
+
+    def on_font_color_automatic_clicked(self, win, popover):
+        """Handle automatic (default) font color selection"""
+        # Set transparent indicator
+        color = Gdk.RGBA()
+        color.parse("transparent")
+        self.set_box_color(win.font_color_indicator, color)
+        
+        # Remove font color from selection
+        js_code = """
+        (function() {
+            document.execCommand('foreColor', false, '');
+            return true;
+        })();
+        """
+        self.execute_js(win, js_code)
+        
+        # Close popover
+        popover.popdown()
+        
+        # Update status
+        win.statusbar.set_text("Default text color restored")
+
+    def on_more_font_colors_clicked(self, win, popover):
+        """Show color chooser dialog for custom text color"""
+        # Create a new color dialog
+        color_dialog = Gtk.ColorDialog()
+        color_dialog.set_title("Choose Text Color")
+        
+        # Get current color from indicator if possible
+        style_context = win.font_color_indicator.get_style_context()
+        current_color = Gdk.RGBA()
+        current_color.parse("black")  # Default
+        
+        # Try to find the CSS provider for the color
+        for provider in style_context.list_providers():
+            css_data = provider.to_string()
+            import re
+            color_match = re.search(r'rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d\.]+)\)', css_data)
+            if color_match:
+                r, g, b, a = map(float, color_match.groups())
+                # Convert to 0-1 range for RGBA
+                current_color.red = r / 255
+                current_color.green = g / 255
+                current_color.blue = b / 255
+                current_color.alpha = float(a)
+                break
+        
+        # Show the color dialog
+        color_dialog.choose_rgba(
+            win,  # Parent window
+            current_color,  # Initial color
+            None,  # No cancellable
+            self.on_font_color_dialog_response,  # Callback
+            popover  # User data to pass to callback
+        )
+
+    def on_font_color_dialog_response(self, dialog, result, popover):
+        """Handle response from the font color dialog"""
+        try:
+            color = dialog.choose_rgba_finish(result)
+            # Find the window
+            for win in self.windows:
+                if win.is_active():
+                    # Apply to the indicator
+                    self.set_box_color(win.font_color_indicator, color)
+                    
+                    # Apply to selection
+                    self.apply_font_color(win, color)
+                    
+                    # Close popover
+                    popover.popdown()
+                    
+                    # Update status
+                    win.statusbar.set_text("Custom text color applied")
+                    break
+        except GLib.Error as error:
+            # Color selection was cancelled
+            pass
+
+    def apply_font_color(self, win, color):
+        """Apply font color to the current selection"""
+        # Convert color to hex format for execCommand
+        hex_color = "#{:02x}{:02x}{:02x}".format(
+            int(color.red * 255),
+            int(color.green * 255),
+            int(color.blue * 255)
+        )
+        
+        # Apply color to selection
+        js_code = f"""
+        (function() {{
+            document.execCommand('foreColor', false, '{hex_color}');
+            return true;
+        }})();
+        """
+        self.execute_js(win, js_code)
+
+    def on_bg_color_button_clicked(self, win):
+        """Handle background color button click (apply current color)"""
+        # Get the current color from the indicator
+        style_context = win.bg_color_indicator.get_style_context()
+        css_provider = None
+        
+        # Try to find the CSS provider for the color
+        for provider in style_context.list_providers():
+            css_provider = provider
+            break
+        
+        if css_provider:
+            # Get CSS data and extract color
+            css_data = css_provider.to_string()
+            import re
+            color_match = re.search(r'rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d\.]+)\)', css_data)
+            if color_match:
+                r, g, b, a = map(float, color_match.groups())
+                # Convert to 0-1 range for RGBA
+                r /= 255
+                g /= 255
+                b /= 255
+                
+                # Create color object
+                color = Gdk.RGBA()
+                color.red = r
+                color.green = g
+                color.blue = b
+                color.alpha = float(a)
+                
+                # Apply color to selection
+                self.apply_bg_color(win, color)
+            else:
+                # No color set or transparent
+                win.statusbar.set_text("No background color selected")
+        else:
+            win.statusbar.set_text("No background color selected")
+
+    def on_bg_color_selected(self, win, color_hex, popover):
+        """Handle background color selection from the grid"""
+        # Parse color
+        color = Gdk.RGBA()
+        color.parse(color_hex)
+        
+        # Apply to the indicator
+        self.set_box_color(win.bg_color_indicator, color)
+        
+        # Apply to selection
+        self.apply_bg_color(win, color)
+        
+        # Close popover
+        popover.popdown()
+        
+        # Update status
+        win.statusbar.set_text(f"Background color set to {color_hex}")
+
+    def on_bg_color_automatic_clicked(self, win, popover):
+        """Handle automatic (default) background color selection"""
+        # Set transparent indicator
+        color = Gdk.RGBA()
+        color.parse("transparent")
+        self.set_box_color(win.bg_color_indicator, color)
+        
+        # Remove background color from selection
+        js_code = """
+        (function() {
+            document.execCommand('hiliteColor', false, '');
+            return true;
+        })();
+        """
+        self.execute_js(win, js_code)
+        
+        # Close popover
+        popover.popdown()
+        
+        # Update status
+        win.statusbar.set_text("Default background color restored")
+
+    def on_more_bg_colors_clicked(self, win, popover):
+        """Show color chooser dialog for custom background color"""
+        # Create a new color dialog
+        color_dialog = Gtk.ColorDialog()
+        color_dialog.set_title("Choose Background Color")
+        
+        # Get current color from indicator if possible
+        style_context = win.bg_color_indicator.get_style_context()
+        current_color = Gdk.RGBA()
+        current_color.parse("white")  # Default
+        
+        # Try to find the CSS provider for the color
+        for provider in style_context.list_providers():
+            css_data = provider.to_string()
+            import re
+            color_match = re.search(r'rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d\.]+)\)', css_data)
+            if color_match:
+                r, g, b, a = map(float, color_match.groups())
+                # Convert to 0-1 range for RGBA
+                current_color.red = r / 255
+                current_color.green = g / 255
+                current_color.blue = b / 255
+                current_color.alpha = float(a)
+                break
+        
+        # Show the color dialog
+        color_dialog.choose_rgba(
+            win,  # Parent window
+            current_color,  # Initial color
+            None,  # No cancellable
+            self.on_bg_color_dialog_response,  # Callback
+            popover  # User data to pass to callback
+        )
+
+    def on_bg_color_dialog_response(self, dialog, result, popover):
+        """Handle response from the background color dialog"""
+        try:
+            color = dialog.choose_rgba_finish(result)
+            # Find the window
+            for win in self.windows:
+                if win.is_active():
+                    # Apply to the indicator
+                    self.set_box_color(win.bg_color_indicator, color)
+                    
+                    # Apply to selection
+                    self.apply_bg_color(win, color)
+                    
+                    # Close popover
+                    popover.popdown()
+                    
+                    # Update status
+                    win.statusbar.set_text("Custom background color applied")
+                    break
+        except GLib.Error as error:
+            # Color selection was cancelled
+            pass
+
+    def apply_bg_color(self, win, color):
+        """Apply background color to the current selection"""
+        # Convert color to hex format for execCommand
+        hex_color = "#{:02x}{:02x}{:02x}".format(
+            int(color.red * 255),
+            int(color.green * 255),
+            int(color.blue * 255)
+        )
+        
+        # Apply color to selection
+        js_code = f"""
+        (function() {{
+            document.execCommand('hiliteColor', false, '{hex_color}');
+            return true;
+        }})();
+        """
+        self.execute_js(win, js_code)
+        
+        
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###################
+    def create_color_button(self, color_hex):
+        """Create a button with a color swatch"""
+        button = Gtk.Button()
+        button.set_size_request(20, 20)
+        
+        # Create a drawing area for the color display
+        color_box = Gtk.Box()
+        color_box.set_size_request(16, 16)
+        
+        # Apply CSS styling for the color
+        color_box.add_css_class("color-box")
+        
+        # Set the background color directly
+        color = Gdk.RGBA()
+        if color_hex == "transparent":
+            # For transparent color
+            color.parse("rgba(0,0,0,0)")
+        else:
+            # For regular colors
+            color.parse(color_hex)
+        
+        self.set_box_color(color_box, color)
+        
+        # Set as button content
+        button.set_child(color_box)
+        
+        # Add tooltip with hex color
+        button.set_tooltip_text(color_hex)
+        
+        return button
+
+    def set_box_color(self, box, color):
+        """Set background color of a box element"""
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data(
+            f"box {{ background-color: rgba({int(color.red*255)}, {int(color.green*255)}, {int(color.blue*255)}, {color.alpha}); }}".encode()
+        )
+        
+        style_context = box.get_style_context()
+        style_context.add_provider(
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+#####################        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    def add_alignment_controls(self, win):
+        """Add text alignment controls"""
         # Create linked button group for alignment controls
         alignment_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         
@@ -3924,7 +4784,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             lambda btn: self.on_align_left_toggled(win, btn))
         alignment_group.append(align_left_button)
         
-    # Align Center button
+        # Align Center button
         align_center_button = Gtk.ToggleButton(icon_name="format-justify-center-symbolic")
         align_center_button.set_tooltip_text("Align Center")
         align_center_button.set_focus_on_click(False)
@@ -3964,7 +4824,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
         win.toolbars_wrapbox.append(alignment_group)
 
-    # Clear formatting button and word art
+    def add_wordart_clear_controls(self, win):
+        """Add Word Art and clear formatting controls"""
         clear_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)        
         clear_group.set_margin_start(0)
         clear_group.set_margin_end(0)
@@ -3978,6 +4839,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Add the button to the insert group
         clear_group.append(wordart_button)          
         
+        # Clear formatting button
         clear_formatting_button = Gtk.Button(icon_name="eraser-symbolic")
         clear_formatting_button.set_tooltip_text("Remove Text Formatting")
         clear_formatting_button.set_size_request(42, 36)
@@ -3986,6 +4848,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
         win.toolbars_wrapbox.append(clear_group)
 
+    def add_insert_controls(self, win):
+        """Add insertion controls (table, text box, image, etc.)"""
         # --- Insert operations group (Table, Text Box, Image) ---
         insert_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         insert_group.add_css_class("linked")  # Apply linked styling
@@ -4003,7 +4867,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         text_box_button.set_tooltip_text("Insert Text Box")
         text_box_button.connect("clicked", lambda btn: self.on_insert_text_box_clicked(win, btn))        
 
-    # Insert image button
+        # Insert image button
         image_button = Gtk.Button(icon_name="insert-image-symbolic")
         image_button.set_size_request(40, 36)
         image_button.set_tooltip_text("Insert Image")
@@ -4027,10 +4891,12 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         insert_group.append(image_button)
         insert_group.append(link_button)
         insert_group.append(insert_date_time_button)
+        
         # Add insert group to toolbar
         win.toolbars_wrapbox.append(insert_group)
 
-        # --- RTL/LTR Direction button ---
+    def add_rtl_controls(self, win):
+        """Add RTL text direction controls"""
         # Create a toggle button group for text direction
         direction_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         direction_group.add_css_class("linked")
@@ -4038,7 +4904,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
         # RTL toggle button
         win.rtl_button = Gtk.ToggleButton(icon_name="text-direction-ltr-symbolic")
-        win.rtl_button.set_icon_name("format-text-direction-rtl-symbolic")
         win.rtl_button.set_tooltip_text("Toggle Right-to-Left Text Direction")
         win.rtl_button.set_focus_on_click(False)
         win.rtl_button.set_size_request(40, 36)
@@ -4047,202 +4912,19 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
         # Add the direction group to the toolbar
         win.toolbars_wrapbox.append(direction_group)
-        
-    # --- Add the Show HTML button ---
+
+    def add_html_controls(self, win):
+        """Add HTML view/edit controls"""
+        # Add the Show HTML button
         show_html_button = Gtk.Button(icon_name="text-x-generic-symbolic")
         show_html_button.set_tooltip_text("Show HTML")
         show_html_button.set_margin_start(10)
         show_html_button.connect("clicked", lambda btn: self.on_show_html_clicked(win, btn))
-        win.toolbars_wrapbox.append(show_html_button)
-
-        # Set toolbar WrapBox as the child of toolbar revealer
-        win.toolbar_revealer.set_child(win.toolbars_wrapbox)
+        win.toolbars_wrapbox.append(show_html_button)        
         
-        # Set the toolbar revealer and headerbar as top bars in the ToolbarView
-        win.toolbar_view.add_top_bar(win.headerbar)
-        win.toolbar_view.add_top_bar(win.toolbar_revealer)
         
-        # Create content area
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        content_box.set_vexpand(True)
-        content_box.set_hexpand(True)
         
-        # Create webview
-        win.webview = WebKit.WebView()
-        win.webview.set_vexpand(True)
-        win.webview.set_hexpand(True) 
-        win.webview.load_html(self.get_editor_html(), None)
-        settings = win.webview.get_settings()
-        try:
-            settings.set_enable_developer_extras(True)
-        except:
-            pass
         
-        try:
-            user_content_manager = win.webview.get_user_content_manager()
-            user_content_manager.register_script_message_handler("contentChanged")
-            user_content_manager.connect("script-message-received::contentChanged", 
-                                        lambda mgr, res: self.on_content_changed(win, mgr, res))
-            
-            # Add handler for formatting changes
-            user_content_manager.register_script_message_handler("formattingChanged")
-            user_content_manager.connect("script-message-received::formattingChanged", 
-                                        lambda mgr, res: self.on_formatting_changed(win, mgr, res))
-            
-            # ADD THESE TABLE-RELATED MESSAGE HANDLERS
-            user_content_manager.register_script_message_handler("tableClicked")
-            user_content_manager.register_script_message_handler("tableDeleted")
-            user_content_manager.register_script_message_handler("tablesDeactivated")
-            
-            user_content_manager.connect("script-message-received::tableClicked", 
-                                        lambda mgr, res: self.on_table_clicked(win, mgr, res))
-            user_content_manager.connect("script-message-received::tableDeleted", 
-                                        lambda mgr, res: self.on_table_deleted(win, mgr, res))
-            user_content_manager.connect("script-message-received::tablesDeactivated", 
-                                        lambda mgr, res: self.on_tables_deactivated(win, mgr, res))
-        except:
-            print("Warning: Could not set up JavaScript message handlers")
-            
-    # Set up key controller for shortcuts
-        win.key_controller = Gtk.EventControllerKey.new()
-        win.key_controller.connect("key-pressed", self.on_webview_key_pressed)
-        win.webview.add_controller(win.key_controller)
-        
-        win.webview.load_html(self.get_initial_html(), None)
-        content_box.append(win.webview)
-        
-        # Set up event to initialize RTL state when editor loads
-        win.webview.connect("load-changed", lambda view, event: 
-                            self.initialize_rtl_state(win) if event == WebKit.LoadEvent.FINISHED else None)
-        
-        # Find bar with revealer - kept at the bottom above statusbar
-        win.find_bar = self.create_find_bar(win)
-        content_box.append(win.find_bar)
-
-        # Create table toolbar with revealer (hidden by default)
-        win.table_toolbar_revealer = Gtk.Revealer()
-        win.table_toolbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_UP)
-        win.table_toolbar_revealer.set_transition_duration(250)
-        win.table_toolbar_revealer.set_reveal_child(False)  # Hidden by default
-        
-        # Create and add table toolbar
-        win.table_toolbar = self.create_table_toolbar(win)
-        win.table_toolbar_revealer.set_child(win.table_toolbar)
-        content_box.append(win.table_toolbar_revealer)
-        
-        # Set the content box as the content of the ToolbarView
-        win.toolbar_view.set_content(content_box)
-        
-    # Create statusbar with revealer
-        win.statusbar_revealer = Gtk.Revealer()
-        win.statusbar_revealer.add_css_class("flat-header")
-        win.statusbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_UP)
-        win.statusbar_revealer.set_transition_duration(250)
-        win.statusbar_revealer.set_reveal_child(True)  # Visible by default
-        
-        # Create a box for the statusbar 
-        statusbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        statusbar_box.set_margin_start(10)
-        statusbar_box.set_margin_end(10)
-        statusbar_box.set_margin_top(0)
-        statusbar_box.set_margin_bottom(4)
-        
-        # Create the text label
-        win.statusbar = Gtk.Label(label="Ready")
-        win.statusbar.set_halign(Gtk.Align.START)
-        win.statusbar.set_hexpand(True)
-        statusbar_box.append(win.statusbar)
-        
-        # Add zoom toggle button at the right side of the statusbar
-        win.zoom_toggle_button = Gtk.ToggleButton()
-        win.zoom_toggle_button.set_icon_name("org.gnome.Settings-accessibility-zoom-symbolic")
-        win.zoom_toggle_button.set_tooltip_text("Toggle Zoom Controls")
-        win.zoom_toggle_button.add_css_class("flat")
-        win.zoom_toggle_button.connect("toggled", lambda btn: self.on_zoom_toggle_clicked(win, btn))
-        statusbar_box.append(win.zoom_toggle_button)
-        
-        # Create zoom revealer for toggle functionality
-        win.zoom_revealer = Gtk.Revealer()
-        win.zoom_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_LEFT)
-        win.zoom_revealer.set_transition_duration(300)
-        win.zoom_revealer.set_reveal_child(False)  # Hidden by default
-        
-    # Create zoom control element inside the revealer
-        zoom_control_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        zoom_control_box.add_css_class("linked")  # Use linked styling for cleaner appearance
-        zoom_control_box.set_halign(Gtk.Align.END)
-        
-        # Create zoom level label
-        win.zoom_label = Gtk.Label(label="100%")
-        win.zoom_label.set_width_chars(4)  # Set a fixed width for the label
-        win.zoom_label.set_margin_start(0)
-        zoom_control_box.append(win.zoom_label)
-        
-        # Add zoom out button
-        zoom_out_button = Gtk.Button.new_from_icon_name("zoom-out-symbolic")
-        zoom_out_button.set_tooltip_text("Zoom Out")
-        zoom_out_button.connect("clicked", lambda btn: self.on_zoom_out_clicked(win))
-        zoom_control_box.append(zoom_out_button)
-        
-        # Create the slider for zoom with just marks, no text
-        adjustment = Gtk.Adjustment(
-            value=100,     # Default value
-            lower=50,      # Minimum value
-            upper=400,     # Maximum value
-            step_increment=10,  # Step size
-            page_increment=50   # Page step size
-        )
-
-        win.zoom_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=adjustment)
-        win.zoom_scale.set_draw_value(False)  # Don't show the value on the scale
-        win.zoom_scale.set_size_request(100, -1)  # Set a reasonable width
-        win.zoom_scale.set_round_digits(0)  # Round to integer values
-
-        # Add only marks without any text
-        for mark_value in [50, 100, 200, 300]:
-            win.zoom_scale.add_mark(mark_value, Gtk.PositionType.BOTTOM, None)
-
-        # Connect to our zoom handler
-        win.zoom_scale.connect("value-changed", lambda s: self.on_zoom_changed_statusbar(win, s))
-        zoom_control_box.append(win.zoom_scale)
-        
-    # Enable snapping to the marks
-        win.zoom_scale.set_has_origin(False)  # Disable highlighting from origin to current value
-
-        # Add zoom in button
-        zoom_in_button = Gtk.Button.new_from_icon_name("zoom-in-symbolic")
-        zoom_in_button.set_tooltip_text("Zoom In")
-        zoom_in_button.connect("clicked", lambda btn: self.on_zoom_in_clicked(win))
-        zoom_control_box.append(zoom_in_button)
-
-        # Set the zoom control box as the child of the revealer
-        win.zoom_revealer.set_child(zoom_control_box)
-
-        # Add the zoom revealer to the statusbar, before the toggle button
-        statusbar_box.insert_child_after(win.zoom_revealer, win.statusbar)
-
-        # Set the statusbar box as the child of the revealer
-        win.statusbar_revealer.set_child(statusbar_box)
-        
-        # Add the statusbar revealer as a bottom bar in the ToolbarView
-        win.toolbar_view.add_bottom_bar(win.statusbar_revealer)
-
-        # Set the ToolbarView as the window content
-        win.set_content(win.toolbar_view)
-
-        # Add case change action to the window
-        case_change_action = Gio.SimpleAction.new("change-case", GLib.VariantType.new("s"))
-        case_change_action.connect("activate", lambda action, param: self.on_change_case(win, param.get_string()))
-        win.add_action(case_change_action)
-        
-        win.connect("close-request", self.on_window_close_request)
-
-        # Add to windows list
-        self.windows.append(win)
-        self.setup_spacing_actions(win)
-        
-        return win
-############# /Create Window
 ############### Text box related methods
     def on_insert_text_box_clicked(self, win, btn):
         """Handle text box insertion button click"""
