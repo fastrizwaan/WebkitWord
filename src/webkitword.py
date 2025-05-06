@@ -361,8 +361,9 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # File operations group (New, Open, Save, Save As)
         file_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        #file_group.add_css_class("flat-header")
         file_group.add_css_class("linked")  # Apply linked styling
-        file_group.set_margin_end(2)
+        #file_group.set_margin_end(2)
         
         # New button
         new_button = Gtk.Button(icon_name="document-new-symbolic")
@@ -3326,10 +3327,15 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Create the header bar
         win.headerbar = Adw.HeaderBar()
+        win.headerbar.set_size_request(0,0)
         win.headerbar.set_margin_bottom(0)  # Ensure no bottom margin
+        win.headerbar.set_margin_top(0)  # Ensure no bottom margin
 
         # Create a revealer for the header bar
         win.headerbar_revealer = Gtk.Revealer()
+        win.headerbar_revealer.set_size_request(0,0)
+        win.headerbar_revealer.set_margin_bottom(0)
+        win.headerbar_revealer.set_margin_top(0)  
         win.headerbar_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
         win.headerbar_revealer.set_transition_duration(250)
         win.headerbar_revealer.set_reveal_child(True)  # Visible by default
@@ -3349,9 +3355,9 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Create WrapBox for flexible toolbar layout
         win.toolbars_wrapbox = Adw.WrapBox()
         win.toolbars_wrapbox.set_margin_start(4)
-        win.toolbars_wrapbox.set_margin_end(0)
-        win.toolbars_wrapbox.set_margin_top(4)
-        win.toolbars_wrapbox.set_margin_bottom(4)
+        win.toolbars_wrapbox.set_margin_end(2)
+        win.toolbars_wrapbox.set_margin_top(1)
+        win.toolbars_wrapbox.set_margin_bottom(2)
         win.toolbars_wrapbox.set_child_spacing(4)
         win.toolbars_wrapbox.set_line_spacing(4)
         
