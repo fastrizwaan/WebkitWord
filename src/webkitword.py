@@ -32,6 +32,9 @@ class WebkitWordApp(Adw.Application):
         self.connect('activate', self.on_activate)
         self.connect("open", self.on_open)
         
+        # Set up default page setup
+        self.default_page_setup = self.create_default_page_setup()
+    
         # Window properties (migrated from WebkitWordWindow)
         self.modified = False
         self.auto_save_enabled = False
@@ -2562,6 +2565,12 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Create a print operation with WebKit
         print_op = WebKit.PrintOperation.new(win.webview)
+        
+        # Apply page setup (window-specific or default)
+        if hasattr(win, 'page_setup'):
+            print_op.set_page_setup(win.page_setup)
+        else:
+            print_op.set_page_setup(self.default_page_setup)
         
         # Run the print dialog
         print_op.run_dialog(win)
@@ -6970,7 +6979,13 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         print_find_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         print_find_group.add_css_class("linked")
         print_find_group.add_css_class("toolbar-group")
-        
+
+        # Page Setup button - NEW!
+        page_setup_button = Gtk.Button(icon_name="document-page-setup-symbolic")
+        page_setup_button.set_tooltip_text("Page Setup")
+        page_setup_button.connect("clicked", lambda btn: self.on_page_setup_clicked(win, btn))
+        page_setup_button.set_size_request(40, 36)      
+          
         # Print button
         print_button = Gtk.Button(icon_name="document-print-symbolic")
         print_button.set_tooltip_text("Print Document")
@@ -6987,6 +7002,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.find_button_toolbar = find_button
         
         # Add print/find buttons to the group
+        print_find_group.append(page_setup_button)
         print_find_group.append(print_button)
         print_find_group.append(find_button)
         
@@ -7147,6 +7163,272 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         if hasattr(win, 'redo_button_toolbar'):
             win.redo_button_toolbar.set_sensitive(redo_state)
 
+    # page setup
+    def create_default_page_setup(self):
+        """Create default page setup with A4 paper and standard margins"""
+        page_setup = Gtk.PageSetup.new()
+        
+        # Set A4 paper size
+        paper_size = Gtk.PaperSize.new(Gtk.PAPER_NAME_A4)
+        page_setup.set_paper_size(paper_size)
+        
+        # Set portrait orientation
+        page_setup.set_orientation(Gtk.PageOrientation.PORTRAIT)
+        
+        # Set 1-inch margins (72 points)
+        page_setup.set_top_margin(72.0, Gtk.Unit.POINTS)
+        page_setup.set_right_margin(72.0, Gtk.Unit.POINTS)
+        page_setup.set_bottom_margin(72.0, Gtk.Unit.POINTS)
+        page_setup.set_left_margin(72.0, Gtk.Unit.POINTS)
+        
+        return page_setup
+
+    def on_page_setup_clicked(self, win, btn):
+        """Handle page setup button click"""
+        # Use specific window's page setup if it exists, otherwise use app defaults
+        if not hasattr(win, 'page_setup'):
+            win.page_setup = self.default_page_setup.copy()
+        
+        self.show_general_page_setup_dialog(win)
+
+
+    def show_general_page_setup_dialog(self, win):
+        """Show page setup dialog for setting default print options"""
+        dialog = Adw.Dialog()
+        dialog.set_title("Page Setup")
+        dialog.set_content_width(400)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        header_label = Gtk.Label()
+        header_label.set_markup("<b>Page Options</b>")
+        header_label.set_halign(Gtk.Align.START)
+        content_box.append(header_label)
+
+        # Paper size
+        paper_size_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        paper_size_label = Gtk.Label(label="Paper Size:")
+        paper_size_label.set_halign(Gtk.Align.START)
+        paper_size_label.set_hexpand(True)
+        paper_sizes = Gtk.StringList()
+        for size in ("A4", "US Letter", "Legal", "A3", "A5"):
+            paper_sizes.append(size)
+        paper_size_dropdown = Gtk.DropDown.new(paper_sizes, None)
+        
+        # Try to use existing page setup if available
+        selected_size_index = 0  # Default to A4
+        if hasattr(win, 'page_setup') and win.page_setup:
+            paper_size = win.page_setup.get_paper_size()
+            paper_name = paper_size.get_name()
+            for i, size in enumerate(["A4", "US LETTER", "LEGAL", "A3", "A5"]):
+                if paper_name.upper() == size:
+                    selected_size_index = i
+                    break
+        
+        paper_size_dropdown.set_selected(selected_size_index)
+        paper_size_box.append(paper_size_label)
+        paper_size_box.append(paper_size_dropdown)
+        content_box.append(paper_size_box)
+
+        # Orientation (radio via CheckButton grouping)
+        orientation_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        orientation_label = Gtk.Label(label="Orientation:")
+        orientation_label.set_halign(Gtk.Align.START)
+        orientation_label.set_hexpand(True)
+        portrait_radio = Gtk.CheckButton(label="Portrait")
+        landscape_radio = Gtk.CheckButton(label="Landscape")
+        landscape_radio.set_group(portrait_radio)
+        
+        # Set current orientation if available
+        if hasattr(win, 'page_setup') and win.page_setup:
+            orientation = win.page_setup.get_orientation()
+            portrait_radio.set_active(orientation == Gtk.PageOrientation.PORTRAIT)
+            landscape_radio.set_active(orientation == Gtk.PageOrientation.LANDSCAPE)
+        else:
+            portrait_radio.set_active(True)  # Default
+        
+        orientation_box.append(orientation_label)
+        orientation_box.append(portrait_radio)
+        orientation_box.append(landscape_radio)
+        content_box.append(orientation_box)
+
+        # Margins header
+        margins_label = Gtk.Label()
+        margins_label.set_markup("<b>Margins</b>")
+        margins_label.set_halign(Gtk.Align.START)
+        margins_label.set_margin_top(16)
+        content_box.append(margins_label)
+
+        # Conversion factors and limits
+        factors = {"in": 72.0, "mm": 72.0/25.4, "cm": 72.0/2.54, "pt": 1.0}
+        bounds = {
+            "in": (0.0, 5.0, 0.05),
+            "mm": (0.0, 100.0, 1.0),
+            "cm": (0.0, 10.0, 0.1),
+            "pt": (0.0, 300.0, 1.0)
+        }
+        units_map = {0: "in", 1: "mm", 2: "cm", 3: "pt"}
+
+        def from_points(val, unit):
+            """Convert point value to the specified unit"""
+            return val / factors[unit]
+
+        def to_points(val, unit):
+            """Convert value in specified unit to points"""
+            return val * factors[unit]
+
+        # Helper to create spin
+        def make_spin(unit="in"):
+            low, high, step = bounds[unit]
+            adj = Gtk.Adjustment.new(1.0, low, high, step, step*5, 0.0)
+            spin = Gtk.SpinButton()
+            spin.set_adjustment(adj)
+            digits = 0 if unit == "pt" else (1 if unit in ("mm", "cm") else 2)
+            spin.set_digits(digits)
+            return spin, adj
+
+        # Units dropdown - create first so we know the current unit
+        units_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        units_box.set_margin_start(12)
+        units_label = Gtk.Label(label="Units:")
+        units_label.set_halign(Gtk.Align.START)
+        units_list = Gtk.StringList()
+        for u in ("inches (in)", "millimeters (mm)", "centimeters (cm)", "points (pt)"):
+            units_list.append(u)
+        units_dropdown = Gtk.DropDown.new(units_list, None)
+        units_dropdown.set_selected(0)  # Default to inches
+        units_dropdown.current_unit = "in"
+        units_box.append(units_label)
+        units_box.append(units_dropdown)
+        content_box.append(units_box)
+
+        # Create spinners with appropriate initial unit
+        current_unit = units_dropdown.current_unit
+        top_spin, top_adj = make_spin(current_unit)
+        right_spin, right_adj = make_spin(current_unit)
+        bottom_spin, bottom_adj = make_spin(current_unit)
+        left_spin, left_adj = make_spin(current_unit)
+
+        # Set current margins if available (converted to the current unit)
+        if hasattr(win, 'page_setup') and win.page_setup:
+            # Get values in points
+            top_pt = win.page_setup.get_top_margin(Gtk.Unit.POINTS)
+            right_pt = win.page_setup.get_right_margin(Gtk.Unit.POINTS)
+            bottom_pt = win.page_setup.get_bottom_margin(Gtk.Unit.POINTS)
+            left_pt = win.page_setup.get_left_margin(Gtk.Unit.POINTS)
+            
+            # Convert to current unit and set in spinners
+            top_spin.set_value(from_points(top_pt, current_unit))
+            right_spin.set_value(from_points(right_pt, current_unit))
+            bottom_spin.set_value(from_points(bottom_pt, current_unit))
+            left_spin.set_value(from_points(left_pt, current_unit))
+        else:
+            # Set reasonable defaults in current unit
+            default_margin_pt = 72.0  # 1 inch in points
+            top_spin.set_value(from_points(default_margin_pt, current_unit))
+            right_spin.set_value(from_points(default_margin_pt, current_unit))
+            bottom_spin.set_value(from_points(default_margin_pt, current_unit))
+            left_spin.set_value(from_points(default_margin_pt, current_unit))
+
+        def on_unit_changed(dropdown, _):
+            # Get old and new units
+            old = dropdown.current_unit
+            new = units_map[dropdown.get_selected()]
+            
+            # For each spinner, convert its value from old unit to points, then to the new unit
+            for spin, adj in ((top_spin, top_adj), (right_spin, right_adj),
+                              (bottom_spin, bottom_adj), (left_spin, left_adj)):
+                # Convert from old unit to points, then to new unit
+                pts = to_points(spin.get_value(), old)
+                
+                # Update spinner settings for the new unit
+                low, high, step = bounds[new]
+                adj.set_lower(low)
+                adj.set_upper(high)
+                adj.set_step_increment(step)
+                
+                # Set appropriate decimal places based on the unit
+                digits = 0 if new == "pt" else (1 if new in ("mm", "cm") else 2)
+                spin.set_digits(digits)
+                
+                # Set the new value (after adjusting spinner settings)
+                new_val = from_points(pts, new)
+                spin.set_value(new_val)
+                
+            # Update the current unit
+            dropdown.current_unit = new
+
+        units_dropdown.connect("notify::selected", on_unit_changed)
+
+        # Layout margin grid
+        margins_grid = Gtk.Grid()
+        margins_grid.set_row_spacing(8)
+        margins_grid.set_column_spacing(12)
+        margins_grid.set_margin_start(12)
+        
+        labels_spins = [("Top:", top_spin), ("Right:", right_spin),
+                      ("Bottom:", bottom_spin), ("Left:", left_spin)]
+                      
+        for idx, (lbl, spin) in enumerate(labels_spins):
+            l = Gtk.Label(label=lbl)
+            l.set_halign(Gtk.Align.START)
+            margins_grid.attach(l, 0, idx, 1, 1)
+            margins_grid.attach(spin, 1, idx, 1, 1)
+        
+        content_box.append(margins_grid)
+
+        # Buttons
+        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        button_box.set_halign(Gtk.Align.END)
+        button_box.set_margin_top(24)
+        
+        cancel = Gtk.Button(label="Cancel")
+        cancel.connect("clicked", lambda w: dialog.close())
+        
+        apply = Gtk.Button(label="Apply")
+        apply.add_css_class("suggested-action")
+
+        def on_apply(btn):
+            # Get paper size
+            idx = paper_size_dropdown.get_selected()
+            name = paper_sizes.get_string(idx)
+            paper_name = getattr(Gtk, f"PAPER_NAME_{name.upper().replace(' ', '_')}", Gtk.PAPER_NAME_A4)
+            
+            # Get orientation
+            orient = Gtk.PageOrientation.LANDSCAPE if landscape_radio.get_active() else Gtk.PageOrientation.PORTRAIT
+            
+            # Get margins and convert to points
+            unit = units_dropdown.current_unit
+            top_margin = to_points(top_spin.get_value(), unit)
+            right_margin = to_points(right_spin.get_value(), unit)
+            bottom_margin = to_points(bottom_spin.get_value(), unit)
+            left_margin = to_points(left_spin.get_value(), unit)
+            
+            # Create page setup
+            page_setup = Gtk.PageSetup.new()
+            page_setup.set_paper_size(Gtk.PaperSize.new(paper_name))
+            page_setup.set_orientation(orient)
+            page_setup.set_top_margin(top_margin, Gtk.Unit.POINTS)
+            page_setup.set_right_margin(right_margin, Gtk.Unit.POINTS)
+            page_setup.set_bottom_margin(bottom_margin, Gtk.Unit.POINTS)
+            page_setup.set_left_margin(left_margin, Gtk.Unit.POINTS)
+            
+            # Store the page setup in the window for future use
+            win.page_setup = page_setup
+            dialog.close()
+            win.statusbar.set_text("Page setup saved")
+                
+        apply.connect("clicked", on_apply)
+        button_box.append(cancel)
+        button_box.append(apply)
+        content_box.append(button_box)
+
+        dialog.set_child(content_box)
+        dialog.present(win)
 
         
 def main():
