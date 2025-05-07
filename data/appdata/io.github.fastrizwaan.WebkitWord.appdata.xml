@@ -50,6 +50,22 @@
       <caption>WebkitWord main editor interface</caption>
       <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/webkitword.png</image>
     </screenshot>
+    <screenshot>
+      <caption>Document with images</caption>
+      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Saving document as PDF</caption>
+      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux-save-as-pdf.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>MHTML file opened with Google Chrome</caption>
+      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux-with-Chrome.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>MHTML file opened with Microsoft Edge</caption>
+      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux-with-Edge.png</image>
+    </screenshot>
   </screenshots>
   <releases>
     <release version="0.1" date="2025-05-05">
