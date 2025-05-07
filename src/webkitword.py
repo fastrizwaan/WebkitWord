@@ -235,11 +235,11 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
 
 
-.linked button               {background-color: rgba(127, 127, 127, 0.06); border: solid 1px rgba(127, 127, 127, 0.00); }
-.linked button:hover         {background-color: rgba(127, 127, 127, 0.25); border: solid 1px rgba(127, 127, 127, 0.25);}
-.linked button:active        {background-color: rgba(127, 127, 127, 0.25); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:checked       {background-color: rgba(127, 127, 127, 0.25); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:checked:hover {background-color: rgba(127, 127, 127, 0.25); border: solid 1px rgba(127, 127, 127, 0.25);}
+.linked button               {background-color: rgba(127, 127, 127, 0.10); border: solid 1px rgba(127, 127, 127, 0.00); }
+.linked button:hover         {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.30);}
+.linked button:active        {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
+.linked button:checked       {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
+.linked button:checked:hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.30);}
 
 /* Corrected menubutton selectors - removed space after colon */
 .linked menubutton:first-child  {
@@ -258,23 +258,23 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
 /* Additional recommended fixes for consistent styling */
 .linked menubutton button {
-    background-color: rgba(127, 127, 127, 0.06);
+    background-color: rgba(127, 127, 127, 0.10);
     border: solid 1px rgba(127, 127, 127, 0.00);
 }
 
 .linked menubutton button:hover {
-    background-color: rgba(127, 127, 127, 0.25);
+    background-color: rgba(127, 127, 127, 0.35);
     border: solid 1px rgba(127, 127, 127, 0.30);
 }
 
 .linked menubutton button:active, 
 .linked menubutton button:checked {
-    background-color: rgba(127, 127, 127, 0.25);
+    background-color: rgba(127, 127, 127, 0.35);
     border: solid 1px rgba(127, 127, 127, 0.00);
 }
 
 .linked menubutton button:checked:hover {
-    background-color: rgba(127, 127, 127, 0.25);
+    background-color: rgba(127, 127, 127, 0.35);
     border: solid 1px rgba(127, 127, 127, 0.30);
 }
 
