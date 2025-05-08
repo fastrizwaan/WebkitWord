@@ -1,0 +1,320 @@
+From: <Saved by WebKit>
+Subject: Webkit Word
+Date: Fri, 8 May 2025 10:27:40 +0530
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----=_NextPart_000_80A5_4857C87A.0F64EF51"
+
+------=_NextPart_000_80A5_4857C87A.0F64EF51
+Content-Type: text/html
+Content-Transfer-Encoding: quoted-printable
+Content-Location: wyciwyg://frame/0
+
+<html style=3D"height: 100%;"><head><meta charset=3D"UTF-8">
+           =20
+            <title>Webkit Word</title>
+            <style>
+               =20
+            html, body {
+                height: 100%;
+                padding: 0;
+                font-family: Sans;
+            }
+            #editor {
+                padding: 0px;
+                outline: none;
+                height: 100%;
+                font-family: Sans;
+                font-size: 11pt;
+                position: relative; /* Important for absolute positioning o=
+f floating tables */
+                min-height: 300px;  /* Ensure there's space to drag tables =
+*/
+            }
+            #editor div {
+                margin: 0;
+                padding: 0;
+            }
+            #editor:empty:not(:focus):before {
+                content: "Type here to start editing...";
+                color: #aaa;
+                font-style: italic;
+                position: absolute;
+                pointer-events: none;
+                top: 10px;
+                left: 10px;
+            }
+       =20
+               =20
+            /* Table styles */
+            table {
+                border-collapse: collapse;
+                margin: 0 0 10px 0;  /* Changed from margin: 10px 0 */
+                position: relative;  /* Important for internal handles */
+                resize: both;
+                overflow: visible;   /* Changed from auto to visible to ens=
+ure handles are not clipped */
+                min-width: 30px;
+                min-height: 30px;
+            }
+            table.left-align {
+                float: left;
+                margin-right: 10px;
+                margin-top: 0;  /* Ensure no top margin for floated tables =
+*/
+                clear: none;
+            }
+            table.right-align {
+                float: right;
+                margin-left: 10px;
+                margin-top: 0;  /* Ensure no top margin for floated tables =
+*/
+                clear: none;
+            }
+            table.center-align {
+                display: table;  /* Ensure block behavior is correct */
+                margin-left: auto !important;
+                margin-right: auto !important;
+                margin-top: 0;
+                float: none !important;
+                clear: both;
+                position: relative;
+            }
+            table.no-wrap {
+                float: none;
+                clear: both;
+                width: 100%;
+                margin-top: 0;
+            }
+            table td {
+                padding: 5px;
+                min-width: 30px;
+                position: relative;
+            }
+            table th {
+                padding: 5px;
+                min-width: 30px;
+                background-color: #f0f0f0;
+            }
+       =20
+               =20
+            /* Floating table styles - border removed from CSS and applied =
+conditionally via JS */
+            table.floating-table {
+                position: absolute !important;
+                z-index: 50;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+                background-color: rgba(255, 255, 255, 0.95);
+                cursor: grab;
+            }
+           =20
+            table.floating-table:active {
+                cursor: grabbing;
+            }
+           =20
+            table.floating-table .table-drag-handle {
+                width: 20px !important;
+                height: 20px !important;
+                border-radius: 3px;
+                opacity: 0.9;
+            }
+       =20
+               =20
+            /* Text box styles (enhanced table) */
+            table.text-box-table {
+                border: 1px solid #ccc !important;
+                border-radius: 0px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                background-color: #fff;
+                width: 80px;  /* Initial width */
+                height: 80px; /* Initial height */
+                min-width: 80px;
+                min-height: 80px;
+                resize: both !important; /* Ensure resizability */
+            }
+           =20
+            table.text-box-table td {
+                vertical-align: top;
+            }
+       =20
+               =20
+            /* Ensure text boxes handle selection properly */
+            #editor ::selection {
+                background-color: #b5d7ff;
+                color: inherit;
+            }
+       =20
+               =20
+            @media (prefers-color-scheme: dark) {
+                html, body {
+                    background-color: #1e1e1e;
+                    color: #c0c0c0;
+                }
+                table th {
+                    background-color: #2a2a2a;
+                }
+                table.text-box-table {
+                    border-color: #444 !important;
+                    background-color: #2d2d2d;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                }
+                table.floating-table {
+                    background-color: rgba(45, 45, 45, 0.95);
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+                }
+                #editor ::selection {
+                    background-color: #264f78;
+                    color: inherit;
+                }
+            }
+       =20
+               =20
+            @media (prefers-color-scheme: light) {
+                html, body {
+                    background-color: #ffffff;
+                    color: #000000;
+                }
+            }
+       =20
+            </style>
+           =20
+       =20
+        <style id=3D"table-handle-styles">
+        /* Table drag handle - positioned inside the table */
+        .table-drag-handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            background-color: #4e9eff;
+            cursor: move;
+            z-index: 1000;
+            display: flex;  /* Changed from static display to allow proper =
+show/hide */
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            pointer-events: all;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Table resize handle - triangular shape in bottom right */
+        .table-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 0 16px 16px;
+            border-color: transparent transparent #4e9eff transparent;
+            cursor: nwse-resize;
+            z-index: 1000;
+            pointer-events: all;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            display: block;  /* Added to allow proper show/hide */
+        }
+       =20
+        /* Floating table styles */
+        .floating-table {
+            position: absolute !important;
+            z-index: 50;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            background-color: rgba(255, 255, 255, 0.95);
+            cursor: grab;
+        }
+       =20
+        .floating-table:active {
+            cursor: grabbing;
+        }
+       =20
+        .floating-table .table-drag-handle {
+            width: 20px !important;
+            height: 20px !important;
+            border-radius: 3px;
+            opacity: 0.9;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .table-drag-handle {
+                background-color: #0078d7;
+            }
+            .table-handle {
+                border-color: transparent transparent #0078d7 transparent;
+            }
+            .floating-table {
+                background-color: rgba(45, 45, 45, 0.95);
+                box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+            }
+            .floating-table .table-drag-handle {
+                background-color: #0078d7;
+            }
+        }</style><style id=3D"editorStyles">
+            /* Paragraph marks */
+           =20
+           =20
+            /* Tab marks - using right arrow character */
+           =20
+           =20
+            /* Space marks - using middle dot character */
+           =20
+           =20
+            /* Line break marks */
+           =20
+            /* Paragraph marks */
+           =20
+           =20
+            /* Tab marks - using right arrow character */
+           =20
+           =20
+            /* Space marks - using middle dot character */
+           =20
+           =20
+            /* Line break marks */
+           =20
+            /* Paragraph marks */
+           =20
+           =20
+            /* Tab marks - using right arrow character */
+           =20
+           =20
+            /* Space marks - using middle dot character */
+           =20
+           =20
+            /* Line break marks */
+            </style></head>
+        <body>
+           =20
+            <div id=3D"editor" contenteditable=3D"true" tabindex=3D"0" clas=
+s=3D""><div><font face=3D"Sans" style=3D"font-size: 11pt;">TODO</font></div=
+><div><ol><li>Shortcuts</li><li>Hanging Indent</li><li>Ctrl + D, ctrl+ shif=
+t + F - Font Options (Writer's font dialog)</li><li>Ctrl+], [ 1 pt&nbsp;</l=
+i><li>Requires font size&nbsp;</li><li>[1, 2, 3, 4 5, 6, 7, 8, 9, 10]</li><=
+li>[11, 12, 13, 14, 15, 16, 17, 18, 19, 20]</li><li>[91, 92, 93, 94, 95, 96=
+, 97, 98, 99, 100]</li><li>ctrl+shift+* toggle non-printing characters</li>=
+<li>ctrl+space - Reset highlighted text to defaul font.</li><li>ctrl+0 shou=
+ld reset font and size and formatting of selected paragraph and/selected te=
+xt, check with text of list, with ctrl+1, then ctrl+0</li><li>shift+f3 chan=
+ge case of selected text (toggle each case)?</li><li>F12 - Save as</li><li>=
+Alt+Shift+D, Alt+Shift+T, insert current date; and insert current time&nbsp=
+;</li></ol><div><br></div></div><div>More Document Management Shortcuts</di=
+v><div>In addition to the above shortcuts, here are a few more document man=
+agement shortcut keys:</div><div><br></div><div>Ctrl + F2: Open the Print P=
+review</div><div>Ctrl + F6: Switch between multiple documents</div><div>Ctr=
+l + Tab: Switch to the next document window</div><div>Ctrl + Shift + Tab: S=
+witch to the previous document window qq<span class=3D"Apple-tab-span" styl=
+e=3D"font-size: 11pt; white-space: pre;">	</span></div></div>
+       =20
+       =20
+       =20
+        </body></html>
+------=_NextPart_000_80A5_4857C87A.0F64EF51--
