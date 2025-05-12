@@ -26,7 +26,7 @@ class WebkitWordApp(Adw.Application):
         super().__init__(application_id='io.github.fastrizwaan.WebkitWord',
                         flags=Gio.ApplicationFlags.HANDLES_OPEN,
                         **kwargs)
-        self.version = "v0.1"
+        self.version = "v0.2"
         self.windows = []  # Track all open windows
         self.window_buttons = {}  # Track window menu buttons {window_id: button}
         self.connect('activate', self.on_activate)
@@ -1789,7 +1789,32 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         new_window_action = Gio.SimpleAction.new("new-window", None)
         new_window_action.connect("activate", self.on_new_window)
         self.add_action(new_window_action)
+
+        open_action = Gio.SimpleAction.new("open", None)
+        open_action.connect("activate", self.on_open_action)
+        self.add_action(open_action)
         
+        save_action = Gio.SimpleAction.new("save", None)
+        save_action.connect("activate", self.on_save_action)
+        self.add_action(save_action)
+        
+        save_as_action = Gio.SimpleAction.new("save-as", None)
+        save_as_action.connect("activate", self.on_save_as_action)
+        self.add_action(save_as_action)
+        
+        # View actions
+        toggle_file_toolbar_action = Gio.SimpleAction.new("toggle-file-toolbar", None)
+        toggle_file_toolbar_action.connect("activate", self.on_toggle_file_toolbar_action)
+        self.add_action(toggle_file_toolbar_action)
+        
+        toggle_format_toolbar_action = Gio.SimpleAction.new("toggle-format-toolbar", None)
+        toggle_format_toolbar_action.connect("activate", self.on_toggle_format_toolbar_action)
+        self.add_action(toggle_format_toolbar_action)
+        
+        toggle_statusbar_action = Gio.SimpleAction.new("toggle-statusbar", None)
+        toggle_statusbar_action.connect("activate", self.on_toggle_statusbar_action)
+        self.add_action(toggle_statusbar_action)
+                
         # Close other windows action
         close_other_windows_action = Gio.SimpleAction.new("close-other-windows", None)
         close_other_windows_action.connect("activate", self.on_close_other_windows)
@@ -2009,6 +2034,44 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             # Focus the next window if available
             if self.windows:
                 self.windows[0].present()
+
+
+    def on_open_action(self, action, param):
+        """Handle open action"""
+        # Get the active window
+        active_win = self.get_active_window()
+        if active_win:
+            self.on_open_clicked(active_win, None)
+
+    def on_save_action(self, action, param):
+        """Handle save action"""
+        active_win = self.get_active_window()
+        if active_win:
+            self.on_save_clicked(active_win, None)
+
+    def on_save_as_action(self, action, param):
+        """Handle save as action"""
+        active_win = self.get_active_window()
+        if active_win:
+            self.on_save_as_clicked(active_win, None)
+
+    def on_toggle_file_toolbar_action(self, action, param):
+        """Handle toggle file toolbar action"""
+        active_win = self.get_active_window()
+        if active_win:
+            self.toggle_file_toolbar(active_win)
+
+    def on_toggle_format_toolbar_action(self, action, param):
+        """Handle toggle format toolbar action"""
+        active_win = self.get_active_window()
+        if active_win:
+            self.toggle_format_toolbar(active_win)
+
+    def on_toggle_statusbar_action(self, action, param):
+        """Handle toggle statusbar action"""
+        active_win = self.get_active_window()
+        if active_win:
+            self.toggle_statusbar(active_win)
     
     # On Quit
     def on_quit(self, action, param):
