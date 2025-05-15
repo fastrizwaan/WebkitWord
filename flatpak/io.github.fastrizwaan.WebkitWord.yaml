@@ -7,11 +7,10 @@ base: org.libreoffice.LibreOffice
 base-version: stable
 finish-args:
   - --share=ipc
-  - --device=dri
   - --share=network
+  - --device=dri
   - --socket=wayland
   - --socket=fallback-x11
-#  - --filesystem=home
   - --filesystem=xdg-run/gvfs
   
 modules:
@@ -22,6 +21,5 @@ modules:
     sources:
       - type: git
         tag: v0.1
-        commit: d48f836c27fa021566ad4553d75f800421108b0b
+        commit: f51566e922eb8251f07acbcab56b0acb0a1da291
         url: https://github.com/fastrizwaan/WebkitWord.git
-

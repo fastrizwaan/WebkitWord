@@ -57,7 +57,8 @@ class WebkitWordApp(Adw.Application):
             '_on_browse_clicked','_on_dialog_response', '_on_format_selection_response',
             '_on_folder_selected', 'show_save_as_warning_dialog', '_on_save_warning_response',
             '_get_file_path_from_dialog', 'show_conversion_notification', 
-            'update_save_sensitivity', 
+            'update_save_sensitivity', '_handle_system_save_dialog_response',
+            '_on_custom_dialog_response', '_open_system_save_dialog',
             
             
             # Format-specific save methods

@@ -496,7 +496,7 @@ def on_save_as_clicked(self, win, button):
     self.show_custom_save_dialog(win)
 
 def show_custom_save_dialog(self, win):
-    """Show custom save dialog with filename entry and extension dropdown using GTK4 patterns"""
+    """Show custom save dialog with filename entry and extension dropdown"""
     # Generate initial filename if needed
     initial_name = ""
     if win.current_file:
@@ -512,11 +512,12 @@ def show_custom_save_dialog(self, win):
     dialog = self._create_custom_save_dialog(win, initial_name, current_format)
     dialog_data = dialog.dialog_data
     
-    # Connect the response signal - GTK4 style
-    dialog.connect("response", self._on_dialog_response, dialog_data, win)
+    # Connect the response signal
+    dialog.connect("response", self._on_custom_dialog_response, dialog_data, win)
     
-    # Present the dialog (GTK4 way to show dialog)
+    # Present the dialog
     dialog.present()
+
 
 def _create_custom_save_dialog(self, win, initial_name="", current_format=None):
     """Create a custom save dialog with filename entry and extension dropdown"""
@@ -528,7 +529,7 @@ def _create_custom_save_dialog(self, win, initial_name="", current_format=None):
         destroy_with_parent=True
     )
         
-    dialog.set_default_size(500, 250)
+    dialog.set_default_size(400, 180)
     
     # Set up the available file formats
     formats = [
@@ -598,56 +599,20 @@ def _create_custom_save_dialog(self, win, initial_name="", current_format=None):
     format_dropdown.set_hexpand(True)
     grid.attach(format_dropdown, 1, 1, 1, 1)
     
-    # Location label and button
-    location_label = Gtk.Label(label="Location:")
-    location_label.set_halign(Gtk.Align.START)
-    grid.attach(location_label, 0, 2, 1, 1)
-    
-    # Get user documents directory as default
-    current_folder = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOCUMENTS)
-    if not current_folder:
-        current_folder = GLib.get_home_dir()
-    
-    # If there's a current file, use its directory
-    if win.current_file:
-        parent_dir = win.current_file.get_parent()
-        if parent_dir and parent_dir.get_path():
-            current_folder = parent_dir.get_path()
+    # Add the grid to the content area
+    content_area.append(grid)
     
     # Store all dialog data in a dictionary for easy access
     dialog_data = {
         "formats": formats,
         "filename_entry": filename_entry,
-        "format_dropdown": format_dropdown,
-        "current_folder": current_folder,
-        "dialog": dialog  # Store reference to the dialog itself
+        "format_dropdown": format_dropdown
     }
     
     # Store the dialog data in the dialog object for later retrieval
     dialog.dialog_data = dialog_data
     
-    location_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-    location_box.set_hexpand(True)
-    
-    location_display = Gtk.Label(label=self._get_shortened_path(current_folder))
-    location_display.set_ellipsize(Pango.EllipsizeMode.START)
-    location_display.set_hexpand(True)
-    location_display.set_halign(Gtk.Align.START)
-    location_box.append(location_display)
-    
-    # Store the location label in dialog data
-    dialog_data["location_label"] = location_display
-    
-    browse_button = Gtk.Button(label="Browse...")
-    browse_button.connect("clicked", self._on_browse_clicked, dialog_data)
-    location_box.append(browse_button)
-    
-    grid.attach(location_box, 1, 2, 1, 1)
-    
-    # Add the grid to the content area
-    content_area.append(grid)
-    
-    # Add action buttons - using the GTK4 approach for dialog buttons
+    # Add action buttons
     cancel_button = dialog.add_button("_Cancel", Gtk.ResponseType.CANCEL)
     save_button = dialog.add_button("_Save", Gtk.ResponseType.ACCEPT)
     save_button.add_css_class("suggested-action")
@@ -1642,7 +1607,7 @@ def show_page_setup_dialog(self, win, file):
     button_box.set_margin_top(24)
     cancel = Gtk.Button(label="Cancel")
     cancel.connect("clicked", lambda w: dialog.close())
-    save = Gtk.Button(label="Save PDFiou")
+    save = Gtk.Button(label="Save PDF")
     save.add_css_class("suggested-action")
 
     def on_save(btn):
@@ -1661,7 +1626,7 @@ def show_page_setup_dialog(self, win, file):
     content_box.append(button_box)
 
     dialog.set_child(content_box)
-    dialog.present(win)
+    dialog.present(win)                 
 
 def _generate_pdf_with_settings(self, win, file, paper_size_name, orientation, 
                                top_margin, right_margin, bottom_margin, left_margin):
@@ -1931,153 +1896,141 @@ def _on_pdf_save_response(self, win, dialog, result):
             self.show_error_dialog(f"Error saving PDF: {e}")    
             
             
-def show_page_setup_dialog(self, win, file):
-    dialog = Adw.Dialog()
-    dialog.set_title("PDF Page Setup")
-    dialog.set_content_width(400)
+    
+##############
 
-    content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
-    content_box.set_margin_top(24)
-    content_box.set_margin_bottom(24)
-    content_box.set_margin_start(24)
-    content_box.set_margin_end(24)
 
-    header_label = Gtk.Label()
-    header_label.set_markup("<b>PDF Page Options</b>")
-    header_label.set_halign(Gtk.Align.START)
-    content_box.append(header_label)
 
-    # Paper size
-    paper_size_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-    paper_size_label = Gtk.Label(label="Paper Size:")
-    paper_size_label.set_halign(Gtk.Align.START)
-    paper_size_label.set_hexpand(True)
-    paper_sizes = Gtk.StringList()
-    for size in ("A4", "US Letter", "Legal", "A3", "A5"):
-        paper_sizes.append(size)
-    paper_size_dropdown = Gtk.DropDown.new(paper_sizes, None)
-    paper_size_dropdown.set_selected(0)
-    paper_size_box.append(paper_size_label)
-    paper_size_box.append(paper_size_dropdown)
-    content_box.append(paper_size_box)
+def _on_custom_dialog_response(self, dialog, response_id, dialog_data, win):
+    """Handle custom dialog response and open system file dialog if needed"""
+    if response_id == Gtk.ResponseType.ACCEPT:
+        # Get filename and format from the custom dialog
+        filename = dialog_data["filename_entry"].get_text().strip()
+        format_idx = dialog_data["format_dropdown"].get_selected()
+        selected_format = dialog_data["formats"][format_idx]
+        extension = selected_format["extension"]
+        
+        # Clean filename (remove extension if present)
+        if "." in filename:
+            filename = filename.rsplit(".", 1)[0]
+            
+        # Append the selected extension
+        filename_with_ext = filename + extension
+        
+        # Now open the system file dialog with these values pre-filled
+        self._open_system_save_dialog(win, filename_with_ext, selected_format)
+    
+    # Destroy the custom dialog
+    dialog.destroy()
 
-    # Orientation (radio via CheckButton grouping)
-    orientation_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-    orientation_label = Gtk.Label(label="Orientation:")
-    orientation_label.set_halign(Gtk.Align.START)
-    orientation_label.set_hexpand(True)
-    portrait_radio = Gtk.CheckButton(label="Portrait")
-    portrait_radio.set_active(True)
-    landscape_radio = Gtk.CheckButton(label="Landscape")
-    landscape_radio.set_group(portrait_radio)
-    orientation_box.append(orientation_label)
-    orientation_box.append(portrait_radio)
-    orientation_box.append(landscape_radio)
-    content_box.append(orientation_box)
+def _open_system_save_dialog(self, win, initial_name, selected_format):
+    """Open the system file dialog with pre-filled filename and type"""
+    # Create a file save dialog
+    save_dialog = Gtk.FileDialog()
+    save_dialog.set_title("Save Document")
+    
+    # Build filters
+    filters = Gio.ListStore.new(Gtk.FileFilter)
+    
+    # Create a filter for the selected format and put it first 
+    selected_filter = Gtk.FileFilter()
+    selected_filter.set_name(f"{selected_format['name']} ({selected_format['extension']})")
+    selected_filter.add_pattern(f"*{selected_format['extension']}")
+    filters.append(selected_filter)
+    
+    # Add other filters for additional formats
+    if selected_format['extension'] != '.mht':
+        mht_filter = Gtk.FileFilter()
+        mht_filter.set_name("MHTML Document (*.mht)")
+        mht_filter.add_pattern("*.mht")
+        mht_filter.add_pattern("*.mhtml")
+        filters.append(mht_filter)
+        
+    if selected_format['extension'] != '.html':
+        html_filter = Gtk.FileFilter()
+        html_filter.set_name("HTML Document (*.html)")
+        html_filter.add_pattern("*.html")
+        html_filter.add_pattern("*.htm")
+        filters.append(html_filter)
+        
+    if selected_format['extension'] != '.txt':
+        txt_filter = Gtk.FileFilter()
+        txt_filter.set_name("Plain Text (*.txt)")
+        txt_filter.add_pattern("*.txt")
+        filters.append(txt_filter)
+        
+    if selected_format['extension'] != '.pdf':
+        pdf_filter = Gtk.FileFilter()
+        pdf_filter.set_name("PDF Document (*.pdf)")
+        pdf_filter.add_pattern("*.pdf")
+        filters.append(pdf_filter)
+    
+    # Add markdown if available and not already selected
+    if HTML2TEXT_AVAILABLE and selected_format['extension'] != '.md':
+        md_filter = Gtk.FileFilter()
+        md_filter.set_name("Markdown Document (*.md)")
+        md_filter.add_pattern("*.md")
+        md_filter.add_pattern("*.markdown")
+        filters.append(md_filter)
+    
+    # Add all files filter at the end
+    all_filter = Gtk.FileFilter()
+    all_filter.set_name("All Files")
+    all_filter.add_pattern("*")
+    filters.append(all_filter)
+    
+    # Apply filters to dialog
+    save_dialog.set_filters(filters)
+    
+    # Set initial name
+    save_dialog.set_initial_name(initial_name)
+    
+    # Get initial folder
+    if win.current_file:
+        initial_folder = os.path.dirname(win.current_file.get_path())
+    else:
+        # Use Documents directory as default
+        initial_folder = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOCUMENTS)
+        if not initial_folder:
+            initial_folder = GLib.get_home_dir()
+    
+    # Set initial folder
+    initial_folder_file = Gio.File.new_for_path(initial_folder)
+    save_dialog.set_initial_folder(initial_folder_file)
+    
+    # Save asynchronously
+    save_dialog.save(
+        win,  # parent window
+        None,  # cancellable
+        lambda dialog, result: self._handle_system_save_dialog_response(dialog, result, win)
+    )
 
-    # Margins header
-    margins_label = Gtk.Label()
-    margins_label.set_markup("<b>Margins</b>")
-    margins_label.set_halign(Gtk.Align.START)
-    margins_label.set_margin_top(16)
-    content_box.append(margins_label)
-
-    # Helper to create spin
-    def make_spin():
-        adj = Gtk.Adjustment.new(1.0, 0.0, 300.0, 1.0, 10.0, 0.0)
-        spin = Gtk.SpinButton()
-        spin.set_adjustment(adj)
-        spin.set_digits(2)
-        spin.set_value(1.0)
-        return spin, adj
-
-    top_spin, top_adj = make_spin()
-    right_spin, right_adj = make_spin()
-    bottom_spin, bottom_adj = make_spin()
-    left_spin, left_adj = make_spin()
-
-    # Units dropdown
-    units_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-    units_box.set_margin_start(12)
-    units_label = Gtk.Label(label="Units:")
-    units_label.set_halign(Gtk.Align.START)
-    units_list = Gtk.StringList()
-    for u in ("inches (in)", "millimeters (mm)", "centimeters (cm)", "points (pt)"):
-        units_list.append(u)
-    units_dropdown = Gtk.DropDown.new(units_list, None)
-    units_dropdown.set_selected(0)
-    units_dropdown.current_unit = "in"
-    units_box.append(units_label)
-    units_box.append(units_dropdown)
-    content_box.append(units_box)
-
-    # Conversion factors and limits
-    factors = {"in": 72.0, "mm": 72.0/25.4, "cm": 72.0/2.54, "pt": 1.0}
-    bounds = {
-        "in": (0.0, 5.0, 0.05),
-        "mm": (0.0, 100.0, 1.0),
-        "cm": (0.0, 10.0, 0.1),
-        "pt": (0.0, 300.0, 1.0)
-    }
-    units_map = {0: "in", 1: "mm", 2: "cm", 3: "pt"}
-
-    def to_points(val, unit):
-        return val * factors[unit]
-
-    def from_points(val, unit):
-        return val / factors[unit]
-
-    def on_unit_changed(dropdown, _):
-        old = dropdown.current_unit
-        new = units_map[dropdown.get_selected()]
-        for spin, adj in ((top_spin, top_adj), (right_spin, right_adj),
-                          (bottom_spin, bottom_adj), (left_spin, left_adj)):
-            pts = to_points(spin.get_value(), old)
-            spin.set_value(from_points(pts, new))
-            low, high, step = bounds[new]
-            adj.set_lower(low)
-            adj.set_upper(high)
-            adj.set_step_increment(step)
-            digits = 0 if new == "pt" else (1 if new in ("mm", "cm") else 2)
-            spin.set_digits(digits)
-        dropdown.current_unit = new
-
-    units_dropdown.connect("notify::selected", on_unit_changed)
-
-    # Layout margin grid
-    margins_grid = Gtk.Grid(row_spacing=8, column_spacing=12, margin_start=12)
-    labels_spins = [("Top:", top_spin), ("Right:", right_spin),
-                    ("Bottom:", bottom_spin), ("Left:", left_spin)]
-    for idx, (lbl, spin) in enumerate(labels_spins):
-        l = Gtk.Label(label=lbl)
-        l.set_halign(Gtk.Align.START)
-        margins_grid.attach(l, 0, idx, 1, 1)
-        margins_grid.attach(spin, 1, idx, 1, 1)
-    content_box.append(margins_grid)
-
-    # Buttons
-    button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-    button_box.set_halign(Gtk.Align.END)
-    button_box.set_margin_top(24)
-    cancel = Gtk.Button(label="Cancel")
-    cancel.connect("clicked", lambda w: dialog.close())
-    save = Gtk.Button(label="Save PDF")
-    save.add_css_class("suggested-action")
-
-    def on_save(btn):
-        idx = paper_size_dropdown.get_selected()
-        name = paper_sizes.get_string(idx)
-        paper = getattr(Gtk, f"PAPER_NAME_{name.upper().replace(' ', '_')}", Gtk.PAPER_NAME_A4)
-        orient = Gtk.PageOrientation.LANDSCAPE if landscape_radio.get_active() else Gtk.PageOrientation.PORTRAIT
-        unit = units_dropdown.current_unit
-        margins = [to_points(sp.get_value(), unit) for sp in (top_spin, right_spin, bottom_spin, left_spin)]
-        dialog.close()
-        self._generate_pdf_with_settings(win, file, paper, orient, *margins)
-
-    save.connect("clicked", on_save)
-    button_box.append(cancel)
-    button_box.append(save)
-    content_box.append(button_box)
-
-    dialog.set_child(content_box)
-    dialog.present(win)                 
+def _handle_system_save_dialog_response(self, dialog, result, win):
+    """Handle response from system save dialog"""
+    try:
+        file = dialog.save_finish(result)
+        if file:
+            file_path = file.get_path()
+            
+            # Save based on file extension
+            file_ext = os.path.splitext(file_path)[1].lower()
+            
+            if file_ext in ['.mht', '.mhtml']:
+                self.save_as_mhtml(win, file)
+            elif file_ext in ['.html', '.htm']:
+                self.save_as_html(win, file)
+            elif file_ext in ['.md', '.markdown']:
+                self.save_as_markdown(win, file)
+            elif file_ext in ['.txt']:
+                self.save_as_text(win, file)
+            elif file_ext == '.pdf':
+                self.save_as_pdf(win, file)
+            else:
+                # For unknown extensions, save as MHTML by default
+                self.save_as_mhtml(win, file)
+                
+            win.statusbar.set_text(f"Saved: {file.get_path()}")
+    except GLib.Error as error:
+        # Handle errors (e.g., user cancelled)
+        if not error.matches(Gtk.DialogError.quark(), Gtk.DialogError.DISMISSED):
+            self.show_error_dialog(win, "Error saving file", str(error))    
