@@ -5004,7 +5004,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         """Handle insertion of an image inside a table cell"""
         win.statusbar.set_text("Inserting image in table...")
         
-        # Create a dialog to configure the image table
+        # Create dialog to configure the image table
         dialog = Adw.Dialog()
         dialog.set_title("Insert Image in Table")
         dialog.set_content_width(350)
@@ -5015,6 +5015,95 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         content_box.set_margin_bottom(24)
         content_box.set_margin_start(24)
         content_box.set_margin_end(24)
+        
+        # Keep track of source type
+        source_type = {"current": "file"}  # Use a dict to allow modification in nested functions
+        
+        # Source tabs for file vs URL
+        source_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        
+        # Create tab buttons
+        source_tabs = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        source_tabs.add_css_class("linked")
+        
+        file_tab_btn = Gtk.ToggleButton(label="From File")
+        file_tab_btn.set_active(True)
+        url_tab_btn = Gtk.ToggleButton(label="From URL")
+        
+        source_tabs.append(file_tab_btn)
+        source_tabs.append(url_tab_btn)
+        
+        # Create stack for the different content areas
+        source_stack = Gtk.Stack()
+        source_stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+        source_stack.set_transition_duration(200)
+        
+        # FILE TAB CONTENT
+        file_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        
+        # Image selection button
+        image_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        image_label = Gtk.Label(label="Image:")
+        image_label.set_halign(Gtk.Align.START)
+        image_label.set_hexpand(True)
+        
+        image_button = Gtk.Button(label="Select Image...")
+        image_button.set_hexpand(True)
+        
+        # Store the selected image path
+        image_button.selected_path = None
+        
+        # Connect click handler for image selection
+        image_button.connect("clicked", lambda btn: self._show_image_chooser(win, btn))
+        
+        image_box.append(image_label)
+        image_box.append(image_button)
+        file_box.append(image_box)
+        
+        # URL TAB CONTENT
+        url_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        
+        # URL entry
+        url_entry_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        url_label = Gtk.Label(label="URL:")
+        url_label.set_halign(Gtk.Align.START)
+        url_label.set_hexpand(True)
+        
+        url_entry = Gtk.Entry()
+        url_entry.set_placeholder_text("https://example.com/image.jpg")
+        url_entry.set_hexpand(True)
+        url_entry.set_activates_default(True)  # Allow Enter key to submit
+        
+        url_entry_box.append(url_label)
+        url_entry_box.append(url_entry)
+        url_box.append(url_entry_box)
+        
+        # Add content to stack
+        source_stack.add_named(file_box, "file")
+        source_stack.add_named(url_box, "url")
+        
+        # Connect tab buttons to switch stack and update source type
+        def on_file_tab_toggled(btn):
+            if btn.get_active():
+                source_stack.set_visible_child_name("file")
+                source_type["current"] = "file"
+                update_insert_button_state()
+        
+        def on_url_tab_toggled(btn):
+            if btn.get_active():
+                source_stack.set_visible_child_name("url")
+                source_type["current"] = "url"
+                update_insert_button_state()
+                
+        file_tab_btn.connect("toggled", on_file_tab_toggled)
+        url_tab_btn.connect("toggled", on_url_tab_toggled)
+        
+        # Add tabs and stack to source box
+        source_box.append(source_tabs)
+        source_box.append(source_stack)
+        
+        # Add source box to content
+        content_box.append(source_box)
         
         # Width input with +/- buttons
         width_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -5072,25 +5161,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         border_box.append(border_spinner_box)
         content_box.append(border_box)
         
-        # Image selection button
-        image_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        image_label = Gtk.Label(label="Image:")
-        image_label.set_halign(Gtk.Align.START)
-        image_label.set_hexpand(True)
-        
-        image_button = Gtk.Button(label="Select Image...")
-        image_button.set_hexpand(True)
-        
-        # Store the selected image path
-        image_button.selected_path = None
-        
-        # Connect click handler for image selection
-        image_button.connect("clicked", lambda btn: self._show_image_chooser(win, btn))
-        
-        image_box.append(image_label)
-        image_box.append(image_button)
-        content_box.append(image_box)
-        
         # Free-floating option checkbox
         float_check = Gtk.CheckButton(label="Free-floating (text wraps around)")
         float_check.set_active(True)  # Enabled by default
@@ -5113,22 +5183,30 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         insert_button.add_css_class("suggested-action")
         insert_button.set_sensitive(False)  # Disabled until image is selected
         
-        # Connect the insert button
+        # Function to update insert button sensitivity
+        def update_insert_button_state(*args):
+            if source_type["current"] == "file":
+                # File tab is active
+                insert_button.set_sensitive(image_button.selected_path is not None)
+            else:
+                # URL tab is active - enable if there's any URL text
+                url_text = url_entry.get_text()
+                insert_button.set_sensitive(url_text is not None and url_text.strip() != "")
+        
+        # Connect the insert button - this needs to handle both file and URL sources
         insert_button.connect("clicked", lambda btn: self._on_image_table_response(
             win, dialog, 
-            image_button.selected_path,
+            image_button.selected_path if source_type["current"] == "file" else None,
+            url_entry.get_text() if source_type["current"] == "url" else None,
             width_spin.get_value_as_int(),
             border_spin.get_value_as_int(),
             float_check.get_active(),
             caption_check.get_active()
         ))
         
-        # Connect to enable insert button when image is selected
-        def update_insert_button_state(*args):
-            insert_button.set_sensitive(image_button.selected_path is not None)
-        
-        # Add callback for image selection
+        # Add callbacks for updating button state
         image_button.connect("notify::label", update_insert_button_state)
+        url_entry.connect("changed", update_insert_button_state)
         
         button_box.append(cancel_button)
         button_box.append(insert_button)
@@ -5137,6 +5215,12 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Set dialog content and present
         dialog.set_child(content_box)
         dialog.present(win)
+        
+        # Set insert button as default action (can be activated by Enter key)
+        dialog.set_default_widget(insert_button)
+        
+        # Make sure initial state is set correctly
+        update_insert_button_state()
         
         
     def _show_image_chooser(self, win, image_button):
@@ -5190,24 +5274,47 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             if error.domain != 'gtk-dialog-error-quark' or error.code != 2:  # Ignore cancel
                 print(f"Error selecting image: {error.message}")
 
-    def _on_image_table_response(self, win, dialog, image_path, width, border_width, is_floating, add_caption):
+    def _on_image_table_response(self, win, dialog, image_path, image_url, width, border_width, is_floating, add_caption):
         """Handle response from the image table dialog"""
-        if not image_path:
+        from_url = image_url is not None and image_url.strip() != ""
+        from_file = image_path is not None
+        
+        if not (from_url or from_file):
             dialog.close()
             return
+            
+        # Initialize variables for image source
+        img_src = None
+        filename = "image"
         
-        # Create base64 of the image
-        import base64
-        with open(image_path, "rb") as image_file:
-            encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
-        
-        # Get image mime type
-        import mimetypes
-        mime_type = mimetypes.guess_type(image_path)[0] or "image/jpeg"
-        
-        # Get image filename for caption
-        import os
-        filename = os.path.basename(image_path)
+        # Set filename and prepare image source for JS
+        if from_file:
+            # Create base64 of the image for local file
+            import base64
+            with open(image_path, "rb") as image_file:
+                encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+            
+            # Get image mime type
+            import mimetypes
+            mime_type = mimetypes.guess_type(image_path)[0] or "image/jpeg"
+            
+            # Image source for JS
+            img_src = f"data:{mime_type};base64,{encoded_image}"
+            
+            # Get image filename for caption
+            import os
+            filename = os.path.basename(image_path)
+        else:
+            # For URL, use direct URL as source
+            img_src = image_url.strip()
+            
+            # Extract filename from URL for caption
+            import os
+            from urllib.parse import urlparse
+            parsed_url = urlparse(img_src)
+            url_filename = os.path.basename(parsed_url.path)
+            if url_filename and "." in url_filename:
+                filename = url_filename
         
         dialog.close()
         
@@ -5262,14 +5369,14 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
                         containerDiv.style.overflow = 'hidden'; // Prevent overflow
                         containerDiv.style.position = 'relative'; // For absolute positioning
                         
-                        // Create the image HTML with embedded data
+                        // Create the image HTML
                         const img = document.createElement('img');
-                        img.src = 'data:{mime_type};base64,{encoded_image}';
+                        img.src = '{img_src}';
                         img.style.maxWidth = '100%';
                         img.style.display = 'block';
                         img.style.width = '100%';
                         img.style.pointerEvents = 'none'; // Prevent direct interaction with the image
-                        img.setAttribute('data-embedded', 'true');
+                        img.setAttribute('data-embedded', '{str(from_file).lower()}');
                         img.setAttribute('alt', '{filename}');
                         img.setAttribute('draggable', 'false'); // Prevent dragging
                         
@@ -5434,6 +5541,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Update status message
         win.statusbar.set_text("Image inserted in table")
+
 
 ############### /Text box related methods   
 
@@ -7493,8 +7601,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
         dialog.set_child(content_box)
         dialog.present(win)
+######################
 
-        
 def main():
     app = WebkitWordApp()
     return app.run(sys.argv)
