@@ -2177,7 +2177,8 @@ def on_drop_cap_clicked(self, win, button):
         lambda webview, result, data: self._handle_drop_cap_result(win, webview, result),
         None
     )
-
+    win.webview.grab_focus()
+    
 def _handle_drop_cap_result(self, win, webview, result):
     """Handle the result from drop cap operation"""
     try:
@@ -2450,6 +2451,7 @@ def on_show_formatting_marks_toggled(self, win, button):
         win.statusbar.set_text("Showing formatting marks")
     else:
         win.statusbar.set_text("Hiding formatting marks")
+
         
 def on_line_spacing_shortcut(self, win, spacing):
     """Handle Ctrl+0, Ctrl+1, Ctrl+2, and Ctrl+5 shortcuts for line spacing"""

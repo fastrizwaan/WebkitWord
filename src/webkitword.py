@@ -420,13 +420,34 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         menu.append_section("Application", app_section)
         
         menu_button.set_menu_model(menu)
-        
+
+        # Connect to popover's closed signal to restore focus to webview
+        popover = menu_button.get_popover()
+        if popover:
+            popover.connect("closed", lambda _: win.webview.grab_focus())
+            
+            # In GTK 4, we use controller-based event handling instead of signals
+            key_controller = Gtk.EventControllerKey.new()
+            key_controller.connect("key-pressed", self.on_popover_key_pressed, popover, win)
+            popover.add_controller(key_controller)
+                    
         # Add menu button to header bar
         win.headerbar.pack_end(menu_button)
 
         self.add_window_menu_button(win)
             
 
+    def on_popover_key_pressed(self, controller, keyval, keycode, state, popover, win):
+        """Handle key pressed events in popovers (GTK 4 style)"""
+        # Check if ESC key was pressed
+        if keyval == Gdk.KEY_Escape:
+            # Hide the popover
+            popover.popdown()
+            # Set focus back to webview
+            win.webview.grab_focus()
+            return True  # Event was handled
+            
+        return False  # Let other handlers process the event
       
 ## /Insert related code
 
@@ -443,6 +464,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             })();
         """)
         win.statusbar.set_text("Cut to clipboard")
+        win.webview.grab_focus()
 
     def on_copy_clicked(self, win, btn):
         """Handle copy button click"""
@@ -457,13 +479,15 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             })();
         """)
         win.statusbar.set_text("Copied to clipboard")
-
+        win.webview.grab_focus()
+        
     def on_paste_clicked(self, win, btn):
         """Handle paste button click"""
         # Try to get text from clipboard
         clipboard = Gdk.Display.get_default().get_clipboard()
         clipboard.read_text_async(None, self.on_text_received, win)
         win.statusbar.set_text("Pasting from clipboard...")
+        win.webview.grab_focus()
 
     def on_text_received(self, clipboard, result, win):
         """Handle clipboard text retrieval"""
@@ -540,6 +564,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.statusbar_revealer.set_reveal_child(not is_revealed)
         if not is_revealed:
             win.statusbar.set_text("Statusbar shown")
+        win.webview.grab_focus()            
         return True
     
     def toggle_headerbar(self, win, *args):
@@ -548,6 +573,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         win.headerbar_revealer.set_reveal_child(not is_revealed)
         status = "hidden" if is_revealed else "shown"
         win.statusbar.set_text(f"Headerbar {status}")
+        win.webview.grab_focus()            
         return True
 
     def toggle_file_toolbar(self, win, *args):
@@ -565,7 +591,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
                 toggle_button.handler_block(toggle_button.toggle_handler_id)
                 toggle_button.set_active(not is_revealed)
                 toggle_button.handler_unblock(toggle_button.toggle_handler_id)
-        
+        win.webview.grab_focus()            
         return True
         
     def toggle_format_toolbar(self, win, *args):
@@ -588,7 +614,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             # Unblock the handlers
             for handler_id in handlers:
                 toggle_button.handler_unblock(handler_id)
-        
+        win.webview.grab_focus()
         return True
 
     def on_close_shortcut(self, win, *args):
@@ -1500,6 +1526,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         except Exception as e:
             print(f"Error during undo: {e}")
             win.statusbar.set_text("Undo failed")
+        win.webview.grab_focus()
         
     def perform_redo(self, win):
         try:
@@ -1513,7 +1540,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         except Exception as e:
             print(f"Error during redo: {e}")
             win.statusbar.set_text("Redo failed")
-
+        win.webview.grab_focus()
+        
     def _on_undo_redo_performed(self, win, webview, result, operation):
         try:
             js_result = webview.evaluate_javascript_finish(result)
@@ -2267,6 +2295,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             issue_url="https://github.com/fastrizwaan/webkitword/issues"
         )
         about.present()
+        parent_window.webview.grab_focus()
 
             
     def on_preferences(self, action, param):
@@ -2457,7 +2486,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Remove the reference to allow proper cleanup
         if hasattr(win, 'preferences_dialog'):
             win.preferences_dialog = None
-
+        win.webview.grab_focus()
+        
     def save_preferences(self, dialog, win, auto_save_enabled, auto_save_interval):
         """Save preferences settings"""
         previous_auto_save = win.auto_save_enabled
@@ -2638,6 +2668,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Run the print dialog
         print_op.run_dialog(win)
+        win.webview.grab_focus()
 ######################
 
 
@@ -2670,6 +2701,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Apply zoom to the editor
         self.apply_zoom(win, zoom_level)
+        win.webview.grab_focus()
         
     # Add these new methods for zoom control in the statusbar
     def on_zoom_toggle_clicked(self, win, button):
@@ -5778,7 +5810,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             lambda webview, result, data: self._show_link_dialog(win, webview, result),
             None
         )
-
+        win.webview.grab_focus()
+        
     def _show_link_dialog(self, win, webview, result):
         """Show the link dialog with current link info if available"""
         try:
@@ -5953,7 +5986,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             """
             self.execute_js(win, js_code)
             win.statusbar.set_text("Link inserted")
-
+        win.webview.grab_focus()
+        
     def _on_remove_link(self, win, dialog, link_info):
         """Remove a link while keeping its text content"""
         dialog.close()
@@ -6227,7 +6261,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             # No selection - show a message
             self.show_error_dialog(win, "Please select a date/time format")
 
-
+        win.webview.grab_focus()
 ############################
 ########### ltr rtl direction
     def rtl_toggle_js(self):
@@ -6637,6 +6671,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             return wordArtHtml;
         }
         """
+
 #################
 
 
@@ -7551,8 +7586,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         button_box.set_margin_top(24)
         
         cancel = Gtk.Button(label="Cancel")
-        cancel.connect("clicked", lambda w: dialog.close())
-        
         apply = Gtk.Button(label="Apply")
         apply.add_css_class("suggested-action")
 
@@ -7585,8 +7618,13 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
             win.page_setup = page_setup
             dialog.close()
             win.statusbar.set_text("Page setup saved")
-                
+            win.webview.grab_focus()
+        def on_cancel(btn):
+             dialog.close()
+             win.webview.grab_focus()
+            
         apply.connect("clicked", on_apply)
+        cancel.connect("clicked", on_cancel)
         button_box.append(cancel)
         button_box.append(apply)
         content_box.append(button_box)
