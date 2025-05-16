@@ -5025,9 +5025,10 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Create tab buttons
         source_tabs = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         source_tabs.add_css_class("linked")
+        source_tabs.set_halign(Gtk.Align.CENTER)  # Center-align the tabs
         
         file_tab_btn = Gtk.ToggleButton(label="From File")
-        file_tab_btn.set_active(True)
+        file_tab_btn.set_active(True)  # Start with file tab active
         url_tab_btn = Gtk.ToggleButton(label="From URL")
         
         source_tabs.append(file_tab_btn)
@@ -5085,16 +5086,24 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         # Connect tab buttons to switch stack and update source type
         def on_file_tab_toggled(btn):
             if btn.get_active():
+                url_tab_btn.set_active(False)  # Untoggle the other button
                 source_stack.set_visible_child_name("file")
                 source_type["current"] = "file"
                 update_insert_button_state()
+            elif not url_tab_btn.get_active():
+                # If both are untoggled, re-toggle this one to ensure one is always active
+                btn.set_active(True)
         
         def on_url_tab_toggled(btn):
             if btn.get_active():
+                file_tab_btn.set_active(False)  # Untoggle the other button
                 source_stack.set_visible_child_name("url")
                 source_type["current"] = "url"
                 update_insert_button_state()
-                
+            elif not file_tab_btn.get_active():
+                # If both are untoggled, re-toggle this one to ensure one is always active
+                btn.set_active(True)
+                    
         file_tab_btn.connect("toggled", on_file_tab_toggled)
         url_tab_btn.connect("toggled", on_url_tab_toggled)
         
@@ -5119,16 +5128,8 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         width_spinner_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         width_spinner_box.add_css_class("linked")
         
-        width_minus_btn = Gtk.Button.new_from_icon_name("list-remove-symbolic")
-        width_minus_btn.connect("clicked", lambda btn: width_spin.spin(Gtk.SpinType.STEP_BACKWARD, 10))
-        
-        width_plus_btn = Gtk.Button.new_from_icon_name("list-add-symbolic")
-        width_plus_btn.connect("clicked", lambda btn: width_spin.spin(Gtk.SpinType.STEP_FORWARD, 10))
-        
         width_spinner_box.append(width_spin)
-        width_spinner_box.append(width_minus_btn)
-        width_spinner_box.append(width_plus_btn)
-        
+
         width_box.append(width_label)
         width_box.append(width_spinner_box)
         content_box.append(width_box)
@@ -5147,15 +5148,7 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         border_spinner_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         border_spinner_box.add_css_class("linked")
         
-        border_minus_btn = Gtk.Button.new_from_icon_name("list-remove-symbolic")
-        border_minus_btn.connect("clicked", lambda btn: border_spin.spin(Gtk.SpinType.STEP_BACKWARD, 1))
-        
-        border_plus_btn = Gtk.Button.new_from_icon_name("list-add-symbolic")
-        border_plus_btn.connect("clicked", lambda btn: border_spin.spin(Gtk.SpinType.STEP_FORWARD, 1))
-        
         border_spinner_box.append(border_spin)
-        border_spinner_box.append(border_minus_btn)
-        border_spinner_box.append(border_plus_btn)
         
         border_box.append(border_label)
         border_box.append(border_spinner_box)
@@ -5221,7 +5214,6 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
         
         # Make sure initial state is set correctly
         update_insert_button_state()
-        
         
     def _show_image_chooser(self, win, image_button):
         """Show a file chooser for selecting an image using GTK4 FileDialog"""
