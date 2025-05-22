@@ -246,18 +246,18 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 .linked button:checked:hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.30);}
 
 /* Corrected menubutton selectors - removed space after colon */
-.linked menubutton:first-child  {
-    border-top-left-radius: 5px; 
-    border-bottom-left-radius: 5px; 
+.linked menubutton:first-child > button  {
+    border-top-left-radius: 10px; 
+    border-bottom-left-radius: 10px; 
     border-top-right-radius: 0px; 
     border-bottom-right-radius: 0px;
 }
 
-.linked menubutton:last-child {
+.linked menubutton:last-child > button {
     border-top-left-radius: 0px; 
     border-bottom-left-radius: 0px; 
-    border-top-right-radius: 5px; 
-    border-bottom-right-radius: 5px; 
+    border-top-right-radius: 10px; 
+    border-bottom-right-radius: 10px; 
 } 
 
 /* Additional recommended fixes for consistent styling */
@@ -287,11 +287,11 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 .linked splitbutton > button  {
     border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
 .linked splitbutton:first-child > button  {
-    border-top-left-radius: 5px; border-bottom-left-radius: 5px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
+    border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
 .linked splitbutton:last-child > button  {
     border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
 .linked splitbutton:last-child > menubutton > button.toggle   {
-    border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 5px; border-bottom-right-radius: 5px;}
+    border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;}
 
 """
         
