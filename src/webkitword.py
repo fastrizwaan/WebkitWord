@@ -1971,7 +1971,7 @@ popover.menu {
         child = win.headerbar.get_first_child()
         while child:
             if (isinstance(child, Gtk.MenuButton) and 
-                child.get_icon_name() == "multi-window-symbolic"):
+                child.get_icon_name() == "window-symbolic"):
                 window_button = child
                 break
             child = child.get_next_sibling()
@@ -1990,7 +1990,7 @@ popover.menu {
         elif show_button:
             # Only create a new button if we need to show it
             window_button = Gtk.MenuButton()
-            window_button.set_icon_name("multi-window-symbolic")
+            window_button.set_icon_name("window-symbolic")
             window_button.set_tooltip_text("Window List")
             window_button.set_menu_model(menu_model)
             window_button.set_visible(show_button)
@@ -3566,7 +3566,7 @@ popover.menu {
         
         # Add zoom toggle button at the right side of the statusbar
         win.zoom_toggle_button = Gtk.ToggleButton()
-        win.zoom_toggle_button.set_icon_name("org.gnome.Settings-accessibility-zoom-symbolic")
+        win.zoom_toggle_button.set_icon_name("zoom-symbolic")
         win.zoom_toggle_button.set_tooltip_text("Toggle Zoom Controls")
         win.zoom_toggle_button.add_css_class("flat")
         win.zoom_toggle_button.connect("toggled", lambda btn: self.on_zoom_toggle_clicked(win, btn))
@@ -3686,7 +3686,6 @@ popover.menu {
         self.add_wordart_clear_controls(win)
         self.add_insert_controls(win)
         self.add_rtl_controls(win)
-        self.add_html_controls(win)
 
 
     def setup_window_actions(self, win):
@@ -4813,16 +4812,6 @@ popover.menu {
         # Add the direction group to the toolbar
         win.toolbars_wrapbox.append(direction_group)
 
-    def add_html_controls(self, win):
-        """Add HTML view/edit controls"""
-        # Add the Show HTML button
-        show_html_button = Gtk.Button(icon_name="text-x-generic-symbolic")
-        show_html_button.set_tooltip_text("Show HTML")
-        show_html_button.set_margin_start(10)
-        show_html_button.connect("clicked", lambda btn: self.on_show_html_clicked(win, btn))
-        win.toolbars_wrapbox.append(show_html_button)        
-        
-        
         
         
 ############### Text box related methods
@@ -6353,7 +6342,7 @@ popover.menu {
         """Handle RTL button toggle"""
         # Update button icon based on state
         if button.get_active():
-            button.set_icon_name("format-text-direction-rtl-symbolic")
+            button.set_icon_name("format-text-direction-symbolic-rtl")
         else:
             button.set_icon_name("format-text-direction-ltr-symbolic")
         
@@ -7257,6 +7246,23 @@ popover.menu {
         
         # Add the print/find group to the toolbar
         file_toolbar.append(print_find_group)
+            
+        # --- HTML Group ---
+        html_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        html_group.add_css_class("linked")
+        html_group.add_css_class("toolbar-group")
+        
+        # Show HTML button
+        show_html_button = Gtk.Button(icon_name="edit-symbolic")
+        show_html_button.set_tooltip_text("Show HTML")
+        show_html_button.connect("clicked", lambda btn: self.on_show_html_clicked(win, btn))
+        show_html_button.set_size_request(40, 36)
+        
+        # Add Show HTML button to the HTML group
+        html_group.append(show_html_button)
+        
+        # Add the HTML group to the toolbar
+        file_toolbar.append(html_group)
         
         return file_toolbar
 
