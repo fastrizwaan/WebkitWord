@@ -244,6 +244,34 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 .linked button:active        {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
 .linked button:checked       {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
 .linked button:checked:hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.30);}
+.linked button:first-child:hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.30);}
+.linked button:not(:first-child):not(:last-child):hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.30);}
+.linked button:last-child:hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.30);}
+
+.linked dropdown listview {
+        margin: 0px;
+    }
+
+/* Dropdown positioning - align with left border of button */
+dropdown popover {
+    margin: 0;
+    padding: 0;
+    border-radius: 0 0 0px 0px; /* Round only bottom corners */
+}
+
+dropdown popover contents {
+    margin: 0;
+    padding: 0;
+    border-radius: 0 0 12px 12px; /* Round only bottom corners */
+}
+
+/* Explicitly set top corners to 0px radius and bottom corners to 5px */
+popover.menu {
+    margin-top: 3px;
+    margin-left: -1px; /* Align with left edge of button */
+
+}
+
 
 /* Corrected dropdown selectors - removed space after colon */
 .linked dropdown:first-child > button  {
