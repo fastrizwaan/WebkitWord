@@ -1994,7 +1994,7 @@ popover.menu {
             window_button.set_tooltip_text("Window List")
             window_button.set_menu_model(menu_model)
             window_button.set_visible(show_button)
-            window_button.add_css_class("flat")
+            #window_button.add_css_class("flat")
             win.headerbar.pack_end(window_button)
             
             # Store reference to the button
