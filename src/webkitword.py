@@ -245,6 +245,28 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 .linked button:checked       {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
 .linked button:checked:hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.30);}
 
+/* Corrected dropdown selectors - removed space after colon */
+.linked dropdown:first-child > button  {
+    border-top-left-radius: 10px; 
+    border-bottom-left-radius: 10px; 
+    border-top-right-radius: 0px; 
+    border-bottom-right-radius: 0px;
+}
+
+/* Explicit rule to ensure middle dropdowns have NO radius */
+.linked dropdown:not(:first-child):not(:last-child) > button {
+    border-radius: 0;
+}
+
+.linked dropdown:last-child > button {
+    border-top-left-radius: 0px; 
+    border-bottom-left-radius: 0px; 
+    border-top-right-radius: 10px; 
+    border-bottom-right-radius: 10px; 
+} 
+
+
+
 /* Corrected menubutton selectors - removed space after colon */
 .linked menubutton:first-child > button  {
     border-top-left-radius: 10px; 
