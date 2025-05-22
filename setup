@@ -99,14 +99,12 @@ install_files() {
     # Install app icon
     install -Dm644 data/icons/apps/io.github.fastrizwaan.WebkitWord.svg "$INSTALL_PATH/share/icons/hicolor/scalable/apps/io.github.fastrizwaan.WebkitWord.svg"
 
-    # Install action icons from Themes directory
+    # Install action icons by copying entire theme directories
     for theme in data/icons/Themes/*; do
         theme_name=$(basename "$theme")
-        if [ -d "$theme/scalable/actions" ]; then
-            mkdir -p "$INSTALL_PATH/share/icons/$theme_name/scalable/actions"
-            for icon in "$theme/scalable/actions/"*.svg; do
-                install -Dm644 "$icon" "$INSTALL_PATH/share/icons/$theme_name/scalable/actions/$(basename "$icon")"
-            done
+        if [ -d "$theme" ]; then
+            mkdir -p "$INSTALL_PATH/share/icons/$theme_name"
+            cp -r "$theme"/* "$INSTALL_PATH/share/icons/$theme_name/"
         fi
     done
 
@@ -116,8 +114,6 @@ install_files() {
     # Update system databases
     echo "Updating MIME, icon, and desktop caches..."
     update-mime-database "$INSTALL_PATH/share/mime" &> /dev/null || echo "Failed to update MIME database."
-    gtk-update-icon-cache "$INSTALL_PATH/share/icons/hicolor/" &> /dev/null || echo "Failed to update icon cache."
-    gtk-update-icon-cache "$INSTALL_PATH/share/icons/Yaru/" &> /dev/null || echo "Failed to update Yaru icon cache."
     update-desktop-database "$INSTALL_PATH/share/applications/" &> /dev/null || echo "Failed to update desktop database."
 
     echo "WebkitWord installed successfully."
