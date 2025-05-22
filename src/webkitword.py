@@ -4084,7 +4084,7 @@ popover.menu {
         font_color_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
 
         # Icon
-        font_color_icon = Gtk.Image.new_from_icon_name("draw-text-symbolic")
+        font_color_icon = Gtk.Image.new_from_icon_name("format-text-color-symbolic")
         font_color_icon.set_margin_top(4)
         font_color_icon.set_margin_bottom(0)
         font_color_box.append(font_color_icon)
@@ -4756,7 +4756,7 @@ popover.menu {
         insert_group.set_margin_start(0)
 
         # Insert table button
-        table_button = Gtk.Button(icon_name="table-symbolic")  # Use a standard table icon
+        table_button = Gtk.Button(icon_name="insert-table-symbolic")  # Use a standard table icon
         table_button.set_size_request(40, 36)
         table_button.set_tooltip_text("Insert Table")
         table_button.connect("clicked", lambda btn: self.on_insert_table_clicked(win, btn))
