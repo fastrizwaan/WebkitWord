@@ -5,7 +5,7 @@
   <summary>Rich text editor using WebKit</summary>
   <icon type="stock">io.github.fastrizwaan.WebkitWord</icon>
   <description>
-    <p>Webkit Word is a feature-rich text editor built with GTK4/Libadwaita that provides a modern word processing experience. Using the WebKit rendering engine, it offers powerful text editing capabilities in a clean, intuitive interface.</p>
+    <p>Webkit Word is a feature-rich text editor built with GTK4/Libadwaita that provides a modern word processing experience. Using the WebKit rendering engine, it offers powerful rich text editing capabilities in a clean, intuitive interface.</p>
     <p>Key features include:</p>
     <ul>
       <li>Advanced text formatting with support for various fonts, sizes, and styles</li>
@@ -15,7 +15,7 @@
       <li>Multiple document support with multi window interface</li>
       <li>Image insertion and manipulation</li>
       <li>Support for links and embedded content</li>
-      <li>Save in multiple formats including HTML, MHTML, PDF, Markdown and plain text</li>
+      <li>Save in multiple formats including HTML, MHTML, PDF and plain text</li>
       <li>Find and replace functionality</li>
       <li>Word Art and special text effects</li>
       <li>Right-to-left text support</li>
