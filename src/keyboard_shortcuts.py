@@ -35,7 +35,10 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
         elif keyval == Gdk.KEY_t: 
             self.toggle_format_toolbar(win)
             return True
-
+        elif keyval == Gdk.KEY_p:  # Add Alt+P for Page Options
+                self.on_page_setup_clicked(win, None)
+                return True
+                
     if ctrl and alt:
         if keyval >= Gdk.KEY_0 and keyval <= Gdk.KEY_6:
             style_num = keyval - Gdk.KEY_0
@@ -79,7 +82,7 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
         elif keyval == Gdk.KEY_z and not shift:
             self.on_undo_shortcut(win)
             return True
-        elif (keyval == Gdk.KEY_z and shift) or keyval == Gdk.KEY_y:
+        elif (keyval == Gdk.KEY_Z and shift) or keyval == Gdk.KEY_y:
             self.on_redo_shortcut(win)
             return True
         elif keyval == Gdk.KEY_x and not shift:
