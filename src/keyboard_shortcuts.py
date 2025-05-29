@@ -64,7 +64,7 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
             return True
 
         elif keyval == Gdk.KEY_0:
-            self.on_line_spacing_shortcut(win, 1.15)  # 1.15 for default spacing
+            self.on_zoom_reset_shortcut(win)  # Reset zoom to 100%
             return True
         elif keyval == Gdk.KEY_1:
             self.on_line_spacing_shortcut(win, 1.0)  # 1.0 for single spacing
@@ -113,14 +113,6 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
             self.on_underline_shortcut(win)
             return True
 
-        elif keyval == Gdk.KEY_plus:
-            self.on_superscript_shortcut(win)
-            return True  
-            
-        elif keyval == Gdk.KEY_equal:
-            self.on_subscript_shortcut(win)
-            return True  
-
         elif keyval == Gdk.KEY_l:
             self.on_align_left_shortcut(win)
             return True
@@ -134,14 +126,12 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
             self.on_align_justify_shortcut(win)
             return True
 
-        elif keyval == Gdk.KEY_KP_Add:
+        # Updated zoom shortcuts: Ctrl+= for zoom in, Ctrl+- for zoom out
+        elif keyval == Gdk.KEY_equal and not shift:
             self.on_zoom_in_shortcut(win)
             return True
-        elif keyval == Gdk.KEY_KP_Subtract:
+        elif keyval == Gdk.KEY_minus and not shift:
             self.on_zoom_out_shortcut(win)
-            return True
-        elif keyval == Gdk.KEY_KP_0 or keyval == Gdk.KEY_KP_Insert:
-            self.on_zoom_reset_shortcut(win)
             return True
 
     if ctrl and shift and not alt:
@@ -163,6 +153,16 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
         elif keyval == Gdk.KEY_less:  # < key (Shift+,)
             self.on_font_size_change_shortcut(win, -2)  # Decrease by points in the font size list
             return True
+        # Updated superscript and subscript shortcuts
+        elif keyval == Gdk.KEY_plus or keyval == Gdk.KEY_equal:  # Ctrl+Shift++ or Ctrl+Shift+=
+            self.on_superscript_shortcut(win)
+            return True
+        elif keyval == Gdk.KEY_underscore or keyval == Gdk.KEY_minus:  # Ctrl+Shift+- (underscore)
+            self.on_subscript_shortcut(win)
+            return True
+        elif keyval == Gdk.KEY_parenright or keyval == Gdk.KEY_0:  # Ctrl+Shift+0 (parenthesis)
+            self.on_line_spacing_shortcut(win, 1.15)  # 1.15 for default spacing
+            return True
             
     if keyval == Gdk.KEY_F12 and not shift:
         self.on_numbered_list_shortcut(win)
@@ -175,7 +175,7 @@ def on_webview_key_pressed(self, controller, keyval, keycode, state):
         return True
         
     if ctrl and not shift and not alt:
-        # Add the font size adjustment with brackets
+        # Font size adjustment with brackets
         if keyval == Gdk.KEY_bracketleft:  # [ key
             self.on_font_size_change_shortcut(win, -1)  # Decrease by 1 point
             return True
@@ -277,7 +277,7 @@ def on_align_justify_shortcut(self, win, *args):
 
 # Zoom shortcuts
 def on_zoom_in_shortcut(self, win, *args):
-    """Handle Ctrl+= or Ctrl++ for zoom in"""
+    """Handle Ctrl+= for zoom in"""
     current_zoom = win.zoom_scale.get_value()
     new_zoom = min(current_zoom + 10, 400)  # Increase by 10%, max 400%
     win.zoom_scale.set_value(new_zoom)
@@ -376,6 +376,4 @@ def apply_zoom(self, win, zoom_level):
     
     # Also update the zoom button label in statusbar if it exists
     if hasattr(win, 'zoom_label'):
-        win.zoom_label.set_text(f"{zoom_level}%")  
-        
-
+        win.zoom_label.set_text(f"{zoom_level}%")
