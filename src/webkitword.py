@@ -713,7 +713,7 @@ popover.menu {
                 {self._get_light_mode_styles()}
             </style>
             <script>
-                window.initialContent = "{content or '<div><font face="Sans" style="font-size: 11pt;"><br></font></div>'}";
+                window.initialContent = "{content or '<div><font face="Sans" style="font-size: 12pt;"><br></font></div>'}";
                 {self.get_editor_js()}
             </script>
         """
@@ -737,7 +737,7 @@ popover.menu {
                 outline: none;
                 height: 100%;
                 font-family: Sans;
-                font-size: 11pt;
+                font-size: 12pt;
                 position: relative; /* Important for absolute positioning of floating tables */
                 min-height: 300px;  /* Ensure there's space to drag tables */
             }
@@ -1493,7 +1493,7 @@ popover.menu {
         """
         
     def get_initial_html(self):
-        return self.get_editor_html('<div><font face="Sans" style="font-size: 11pt;"><br></font></div>')
+        return self.get_editor_html('<div><font face="Sans" style="font-size: 12pt;"><br></font></div>')
     
     def execute_js(self, win, script):
         """Execute JavaScript in the WebView"""
@@ -3432,7 +3432,7 @@ popover.menu {
         win.toolbars_wrapbox = Adw.WrapBox()
         win.toolbars_wrapbox.set_margin_start(4)
         win.toolbars_wrapbox.set_margin_end(2)
-        win.toolbars_wrapbox.set_margin_top(1)
+        win.toolbars_wrapbox.set_margin_top(2)
         win.toolbars_wrapbox.set_margin_bottom(2)
         win.toolbars_wrapbox.set_child_spacing(4)
         win.toolbars_wrapbox.set_line_spacing(4)
@@ -3556,7 +3556,7 @@ popover.menu {
         statusbar_box.set_margin_start(10)
         statusbar_box.set_margin_end(10)
         statusbar_box.set_margin_top(0)
-        statusbar_box.set_margin_bottom(4)
+        statusbar_box.set_margin_bottom(0)
         
         # Create the text label
         win.statusbar = Gtk.Label(label="Ready")
@@ -7102,12 +7102,12 @@ popover.menu {
     def create_file_toolbar(self, win):
         """Create the file toolbar with buttons mirroring the headerbar operations"""
         # Create a box for the file toolbar
-        file_toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        file_toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         #file_toolbar.add_css_class("toolbar-container")
         file_toolbar.set_margin_start(2)
         file_toolbar.set_margin_end(0)
         file_toolbar.set_margin_top(4)
-        file_toolbar.set_margin_bottom(4)
+        file_toolbar.set_margin_bottom(2)
         
         # --- File Operations Group ---
         file_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
