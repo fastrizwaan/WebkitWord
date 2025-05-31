@@ -240,12 +240,12 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
 
 .linked button               {background: @theme_bg_color; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 20px rgba(127, 127, 127, 0.18);}
-.linked button:hover         {background-color: yellow; border: solid 1px rgba(127, 127, 127, 0.30);}
+.linked button:hover         {background: radial-gradient(circle, #ffff99 10%, #ffff33 10%, #ff8c00 90%); border-image: linear-gradient(45deg, #ff8c00, #ff4500, #ff6347) 1;}
 .linked button:active        {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
 .linked button:checked       {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
 .linked button:checked:hover {background-color: yellow; border: solid 1px rgba(127, 127, 127, 0.30);}
-.linked button:hover:not(:first-child):not(:last-child) {background-color: yellow; border: solid 1px rgba(127, 127, 127, 0.30);margin-right: 1px;}
-.linked button:not(:first-child):not(:last-child):hover {background-color: yellow; border: solid 1px rgba(127, 127, 127, 0.30);}
+.linked button:hover:not(:first-child):not(:last-child) {background-color: yellow; border: solid 0px rgba(127, 127, 127, 0.30);margin-right: 1px;}
+.linked button:not(:first-child):not(:last-child):hover {background-color: yellow; border: solid 0px rgba(127, 127, 127, 0.30);}
 .linked button:last-child:hover {background-color: yellow; border: solid 1px rgba(127, 127, 127, 0.30);}
 
 .linked dropdown listview {
