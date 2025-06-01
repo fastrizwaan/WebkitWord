@@ -7733,7 +7733,664 @@ popover.menu {
         dialog.set_child(content_box)
         dialog.present(win)
 ######################
+    def setup_input_handler_js(self):
+        """JavaScript to handle input events and content changes, saving state only for specific actions."""
+        return """
+        function setupInputHandler(editor) {
+            // Track the last saved content for comparison
+            let lastSavedContent = editor.innerHTML;
+            
+            // Helper function to check if content has changed
+            function hasContentChanged() {
+                const currentContent = editor.innerHTML;
+                if (currentContent !== lastSavedContent) {
+                    lastSavedContent = currentContent;
+                    return true;
+                }
+                return false;
+            }
+            
+            // Helper function to save state to undo stack
+            function saveEditorState() {
+                if (!window.isUndoRedo && hasContentChanged()) {
+                    saveState();
+                    window.lastContent = lastSavedContent;
+                    window.redoStack = [];
+                    try {
+                        window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                    } catch(e) {
+                        console.log("Could not notify about changes:", e);
+                    }
+                }
+            }
+            
+            // Track ongoing typing to batch changes
+            let typingTimeout = null;
+            const typingDelay = 500; // 1 second delay to batch typing changes
+            
+            editor.addEventListener('input', function(e) {
+                // Ensure content is wrapped in a div if needed
+                if (document.getSelection().anchorNode === editor) {
+                    document.execCommand('formatBlock', false, 'div');
+                }
+                
+                // Clear any existing typing timeout
+                if (typingTimeout) {
+                    clearTimeout(typingTimeout);
+                }
+                
+                // Set a timeout to check if we should save the state
+                typingTimeout = setTimeout(function() {
+                    // Only save if a significant change occurred (we'll check specific conditions below)
+                    const currentContent = editor.innerHTML;
+                    if (!window.isUndoRedo && currentContent !== window.lastContent) {
+                        saveEditorState();
+                    }
+                }, typingDelay);
+            });
+            
+            // Handle keydown for specific actions (Enter, Tab, punctuation, commands)
+            editor.addEventListener('keydown', function(e) {
+                // Check for specific keys or commands
+                const isEnter = e.key === 'Enter';
+                const isTab = e.key === 'Tab';
+                const isPunctuation = /[.,!?;:'"()]/.test(e.key);
+                const isCommand = e.ctrlKey || e.metaKey; // Ctrl or Command key for shortcuts
+                
+                if (isEnter || isTab || isPunctuation || isCommand) {
+                    // For Enter, Tab, punctuation, or commands, save the state immediately
+                    if (typingTimeout) {
+                        clearTimeout(typingTimeout); // Cancel any pending batch
+                    }
+                    
+                    // Save state if content has changed
+                    if (!window.isUndoRedo && hasContentChanged()) {
+                        saveEditorState();
+                    }
+                }
+            });
+            
+            // Handle paste events (Ctrl+V or Cmd+V)
+            editor.addEventListener('paste', function(e) {
+                if (typingTimeout) {
+                    clearTimeout(typingTimeout); // Cancel any pending batch
+                }
+                
+                // Save state after paste (async to ensure content is updated)
+                setTimeout(function() {
+                    if (!window.isUndoRedo && hasContentChanged()) {
+                        saveEditorState();
+                    }
+                }, 0);
+            });
+            
+            // Handle commands like Ctrl+B, Ctrl+I, etc.
+            editor.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && ['b', 'i', 'u'].includes(e.key.toLowerCase())) {
+                    // For formatting commands (bold, italic, underline), save state after execution
+                    setTimeout(function() {
+                        if (!window.isUndoRedo && hasContentChanged()) {
+                            saveEditorState();
+                        }
+                    }, 0);
+                }
+            });
+        }
+        """
+#################
+    def setup_input_handler_js(self):
+        """JavaScript to handle input events and content changes, saving state before whitespace."""
+        return """
+        function setupInputHandler(editor) {
+            // Track the last saved content for comparison
+            let lastSavedContent = editor.innerHTML;
+            
+            // Helper function to check if content has changed
+            function hasContentChanged() {
+                const currentContent = editor.innerHTML;
+                if (currentContent !== lastSavedContent) {
+                    lastSavedContent = currentContent;
+                    return true;
+                }
+                return false;
+            }
+            
+            // Helper function to save state to undo stack
+            function saveEditorState() {
+                if (!window.isUndoRedo && hasContentChanged()) {
+                    saveState();
+                    window.lastContent = lastSavedContent;
+                    window.redoStack = [];
+                    try {
+                        window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                    } catch(e) {
+                        console.log("Could not notify about changes:", e);
+                    }
+                }
+            }
+            
+            // Handle input to ensure content is wrapped in a div
+            editor.addEventListener('input', function(e) {
+                if (document.getSelection().anchorNode === editor) {
+                    document.execCommand('formatBlock', false, 'div');
+                }
+            });
+            
+            // Handle keydown for whitespace characters
+            editor.addEventListener('keydown', function(e) {
+                // Define whitespace characters more comprehensively
+                const isWhitespace = /[\s]/.test(e.key) || 
+                                   e.key === ' ' || 
+                                   e.key === 'Tab' || 
+                                   e.key === 'Enter';
+                
+                if (isWhitespace) {
+                    console.log('Whitespace detected:', e.key); // Debug log
+                    // Save state before the whitespace is added to the DOM
+                    if (!window.isUndoRedo) {
+                        // Force save state regardless of hasContentChanged for whitespace
+                        saveState();
+                        window.lastContent = editor.innerHTML;
+                        window.redoStack = [];
+                        try {
+                            window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                        } catch(e) {
+                            console.log("Could not notify about changes:", e);
+                        }
+                    }
+                }
+            });
+            
+            // Handle keyup to update lastSavedContent after whitespace is added
+            editor.addEventListener('keyup', function(e) {
+                // Define whitespace characters more comprehensively
+                const isWhitespace = /[\s]/.test(e.key) || 
+                                   e.key === ' ' || 
+                                   e.key === 'Tab' || 
+                                   e.key === 'Enter';
+                
+                if (isWhitespace) {
+                    // Update lastSavedContent after the whitespace is added
+                    lastSavedContent = editor.innerHTML;
+                    console.log('Updated lastSavedContent after whitespace'); // Debug log
+                }
+            });
+        }
+        """
+######################################    #    
+    def setup_input_handler_js(self):
+        """JavaScript to handle input events and content changes, saving state before whitespace."""
+        return """
+        function setupInputHandler(editor) {
+            // Track the last saved content for comparison
+            let lastSavedContent = editor.innerHTML;
+            
+            // Helper function to check if content has changed
+            function hasContentChanged() {
+                const currentContent = editor.innerHTML;
+                if (currentContent !== lastSavedContent) {
+                    lastSavedContent = currentContent;
+                    return true;
+                }
+                return false;
+            }
+            
+            // Helper function to save state to undo stack
+            function saveEditorState() {
+                if (!window.isUndoRedo && hasContentChanged()) {
+                    saveState();
+                    window.lastContent = lastSavedContent;
+                    window.redoStack = [];
+                    try {
+                        window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                    } catch(e) {
+                        console.log("Could not notify about changes:", e);
+                    }
+                }
+            }
+            
+            // Handle input to ensure content is wrapped in a div
+            editor.addEventListener('input', function(e) {
+                if (document.getSelection().anchorNode === editor) {
+                    document.execCommand('formatBlock', false, 'div');
+                }
+            });
+            
+            // Handle keydown for whitespace and punctuation characters
+            editor.addEventListener('keydown', function(e) {
+                // Define whitespace characters more comprehensively
+                const isWhitespace = /[\s]/.test(e.key) || 
+                                   e.key === ' ' || 
+                                   e.key === 'Tab' || 
+                                   e.key === 'Enter';
+                
+                // Define punctuation characters
+                const isPunctuation = /[.,!?;:'"]/.test(e.key);
+                
+                if (isWhitespace || isPunctuation) {
+                    console.log('Whitespace or punctuation detected:', e.key); // Debug log
+                    // Save state before the character is added to the DOM
+                    if (!window.isUndoRedo) {
+                        // Force save state for whitespace and punctuation
+                        saveState();
+                        window.lastContent = editor.innerHTML;
+                        window.redoStack = [];
+                        try {
+                            window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                        } catch(e) {
+                            console.log("Could not notify about changes:", e);
+                        }
+                    }
+                }
+            });
+            
+            // Handle keyup to update lastSavedContent after whitespace/punctuation is added
+            editor.addEventListener('keyup', function(e) {
+                // Define whitespace characters more comprehensively
+                const isWhitespace = /[\s]/.test(e.key) || 
+                                   e.key === ' ' || 
+                                   e.key === 'Tab' || 
+                                   e.key === 'Enter';
+                
+                // Define punctuation characters
+                const isPunctuation = /[.,!?;:'"]/.test(e.key);
+                
+                if (isWhitespace || isPunctuation) {
+                    // Update lastSavedContent after the character is added
+                    lastSavedContent = editor.innerHTML;
+                    console.log('Updated lastSavedContent after whitespace/punctuation'); // Debug log
+                }
+            });
+        }
+        """
 
+#####################
+    def setup_input_handler_js(self):
+        """JavaScript to handle input events and content changes, saving state before whitespace and punctuation."""
+        return """
+        function setupInputHandler(editor) {
+            // Track the last saved content for comparison
+            let lastSavedContent = editor.innerHTML;
+            
+            // Helper function to check if content has changed
+            function hasContentChanged() {
+                const currentContent = editor.innerHTML;
+                if (currentContent !== lastSavedContent) {
+                    lastSavedContent = currentContent;
+                    return true;
+                }
+                return false;
+            }
+            
+            // Helper function to save state to undo stack
+            function saveEditorState() {
+                if (!window.isUndoRedo && hasContentChanged()) {
+                    saveState();
+                    window.lastContent = lastSavedContent;
+                    window.redoStack = [];
+                    try {
+                        window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                    } catch(e) {
+                        console.log("Could not notify about changes:", e);
+                    }
+                }
+            }
+            
+            // Handle input to ensure content is wrapped in a div
+            editor.addEventListener('input', function(e) {
+                if (document.getSelection().anchorNode === editor) {
+                    document.execCommand('formatBlock', false, 'div');
+                }
+            });
+            
+            // Handle keyup for whitespace, space, and punctuation characters
+            // Save state AFTER the character has been added to include it in the undo stack
+            editor.addEventListener('keyup', function(e) {
+                // Define whitespace characters (including explicit space check)
+                const isWhitespace = /[\s]/.test(e.key) || 
+                                   e.key === ' ' || 
+                                   e.key === 'Space' ||
+                                   e.key === 'Tab' || 
+                                   e.key === 'Enter';
+                
+                // Define punctuation characters (expanded set)
+                const isPunctuation = /[.,!?;:'"(){}\[\]\-_+=|\\/@#$%^&*`~<>]/.test(e.key);
+                
+                // Explicit space check
+                const isSpace = e.key === ' ' || e.key === 'Space' || e.code === 'Space';
+                
+                if (isWhitespace || isPunctuation || isSpace) {
+                    console.log('Whitespace, space, or punctuation detected:', e.key, 'Code:', e.code); // Debug log
+                    // Save state AFTER the character is added to the DOM (includes the space/punctuation)
+                    if (!window.isUndoRedo) {
+                        // Update lastSavedContent first to include the new character
+                        lastSavedContent = editor.innerHTML;
+                        // Then save state with the character included
+                        saveState();
+                        window.lastContent = lastSavedContent;
+                        window.redoStack = [];
+                        try {
+                            window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                        } catch(e) {
+                            console.log("Could not notify about changes:", e);
+                        }
+                    }
+                }
+            });
+        }
+        """
+    ############ The above is great
+    def setup_input_handler_js(self):
+        """JavaScript to handle input events and content changes, saving state before whitespace and punctuation."""
+        return """
+        function setupInputHandler(editor) {
+            // Track the last saved content for comparison
+            let lastSavedContent = editor.innerHTML;
+            
+            // Helper function to check if content has changed
+            function hasContentChanged() {
+                const currentContent = editor.innerHTML;
+                if (currentContent !== lastSavedContent) {
+                    lastSavedContent = currentContent;
+                    return true;
+                }
+                return false;
+            }
+            
+            // Helper function to save state to undo stack
+            function saveEditorState() {
+                if (!window.isUndoRedo && hasContentChanged()) {
+                    saveState();
+                    window.lastContent = lastSavedContent;
+                    window.redoStack = [];
+                    try {
+                        window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                    } catch(e) {
+                        console.log("Could not notify about changes:", e);
+                    }
+                }
+            }
+            
+            // Handle input to ensure content is wrapped in a div
+            editor.addEventListener('input', function(e) {
+                if (document.getSelection().anchorNode === editor) {
+                    document.execCommand('formatBlock', false, 'div');
+                }
+            });
+            
+            // Handle keydown for Ctrl+Z (undo) and Ctrl+Y (redo)
+            editor.addEventListener('keydown', function(e) {
+                // Check for Ctrl+Z (undo)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    console.log('Ctrl+Z detected - performing undo');
+                    
+                    // Immediately update the stack with current content if it has changed
+                    if (hasContentChanged()) {
+                        console.log('Content changed, saving current state before undo');
+                        saveState();
+                        window.lastContent = lastSavedContent;
+                    }
+                    
+                    // Perform the undo action
+                    if (typeof undo === 'function') {
+                        undo();
+                    } else {
+                        console.log('Undo function not available');
+                    }
+                    return;
+                }
+                
+                // Check for Ctrl+Shift+Z or Ctrl+Y (redo)
+                if (((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) || 
+                    ((e.ctrlKey || e.metaKey) && e.key === 'y')) {
+                    e.preventDefault();
+                    console.log('Redo shortcut detected - performing redo');
+                    
+                    // Perform the redo action
+                    if (typeof redo === 'function') {
+                        redo();
+                    } else {
+                        console.log('Redo function not available');
+                    }
+                    return;
+                }
+            });
+            
+            // Handle keyup for whitespace, space, and punctuation characters
+            // Save state AFTER the character has been added to include it in the undo stack
+            editor.addEventListener('keyup', function(e) {
+                // Skip if this was an undo/redo operation
+                if (window.isUndoRedo) {
+                    return;
+                }
+                
+                // Define whitespace characters (including explicit space check)
+                const isWhitespace = /[\s]/.test(e.key) || 
+                                   e.key === ' ' || 
+                                   e.key === 'Space' ||
+                                   e.key === 'Tab' || 
+                                   e.key === 'Enter';
+                
+                // Define punctuation characters (expanded set)
+                const isPunctuation = /[.,!?;:'"(){}\[\]\-_+=|\\/@#$%^&*`~<>]/.test(e.key);
+                
+                // Explicit space check
+                const isSpace = e.key === ' ' || e.key === 'Space' || e.code === 'Space';
+                
+                if (isWhitespace || isPunctuation || isSpace) {
+                    console.log('Whitespace, space, or punctuation detected:', e.key, 'Code:', e.code); // Debug log
+                    // Save state AFTER the character is added to the DOM (includes the space/punctuation)
+                    // Update lastSavedContent first to include the new character
+                    lastSavedContent = editor.innerHTML;
+                    // Then save state with the character included
+                    saveState();
+                    window.lastContent = lastSavedContent;
+                    window.redoStack = [];
+                    try {
+                        window.webkit.messageHandlers.contentChanged.postMessage("changed");
+                    } catch(e) {
+                        console.log("Could not notify about changes:", e);
+                    }
+                }
+            });
+        }
+        """        
+#################
+    def setup_input_handler_js(self):
+        """JavaScript to handle input events and content changes, saving state before whitespace and punctuation."""
+        return """
+function setupInputHandler(editor) {
+    let lastSavedContent = editor.innerHTML;
+
+    function hasContentChanged() {
+        const currentContent = editor.innerHTML;
+        if (currentContent !== lastSavedContent) {
+            lastSavedContent = currentContent;
+            return true;
+        }
+        return false;
+    }
+
+    function saveEditorState() {
+        if (!window.isUndoRedo && hasContentChanged()) {
+            saveState();
+            window.lastContent = lastSavedContent;
+            window.redoStack = [];
+            try {
+                window.webkit.messageHandlers.contentChanged.postMessage("changed");
+            } catch (e) {
+                console.log("Could not notify about changes:", e);
+            }
+        }
+    }
+
+    editor.addEventListener('input', function (e) {
+        if (document.getSelection().anchorNode === editor) {
+            document.execCommand('formatBlock', false, 'div');
+        }
+    });
+
+    editor.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+            e.preventDefault();
+            console.log('Ctrl+Z detected - performing undo');
+
+            if (hasContentChanged()) {
+                saveState();
+                window.lastContent = lastSavedContent;
+            }
+
+            if (typeof undo === 'function') {
+                window.isUndoRedo = true;
+                const newContent = undo();
+                if (newContent !== undefined) {
+                    editor.innerHTML = newContent;
+                }
+                lastSavedContent = editor.innerHTML;
+                window.lastContent = lastSavedContent;
+                window.isUndoRedo = false;
+            } else {
+                console.log('Undo function not available');
+            }
+            return;
+        }
+
+        if (((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) ||
+            ((e.ctrlKey || e.metaKey) && e.key === 'y')) {
+            e.preventDefault();
+            console.log('Redo shortcut detected - performing redo');
+
+            if (typeof redo === 'function') {
+                window.isUndoRedo = true;
+                const newContent = redo();
+                if (newContent !== undefined) {
+                    editor.innerHTML = newContent;
+                }
+                lastSavedContent = editor.innerHTML;
+                window.lastContent = lastSavedContent;
+                window.isUndoRedo = false;
+            } else {
+                console.log('Redo function not available');
+            }
+            return;
+        }
+    });
+
+    editor.addEventListener('keyup', function (e) {
+        if (window.isUndoRedo) {
+            return;
+        }
+
+        const isWhitespace = /[\s]/.test(e.key) ||
+            e.key === ' ' ||
+            e.key === 'Space' ||
+            e.key === 'Tab' ||
+            e.key === 'Enter';
+
+        const isPunctuation = /[.,!?;:'"(){}\[\]\-_+=|\\/@#$%^&*`~<>]/.test(e.key);
+        const isSpace = e.key === ' ' || e.key === 'Space' || e.code === 'Space';
+
+        if (isWhitespace || isPunctuation || isSpace) {
+            console.log('Whitespace or punctuation:', e.key);
+            lastSavedContent = editor.innerHTML;
+            saveState();
+            window.lastContent = lastSavedContent;
+            window.redoStack = [];
+            try {
+                window.webkit.messageHandlers.contentChanged.postMessage("changed");
+            } catch (e) {
+                console.log("Could not notify about changes:", e);
+            }
+        }
+    });
+}
+
+        """
+    ########################
+    def setup_input_handler_js(self):
+        """JavaScript to simulate punctuation keyup before Ctrl+Z to save, then undo."""
+        return """
+    function setupInputHandler(editor) {
+        let lastSavedContent = editor.innerHTML;
+
+        function saveEditorState() {
+            saveState();
+            lastSavedContent = editor.innerHTML;
+            window.lastContent = lastSavedContent;
+            window.redoStack = [];
+            try {
+                window.webkit.messageHandlers.contentChanged.postMessage("changed");
+            } catch (e) {
+                console.log("Could not notify about changes:", e);
+            }
+        }
+
+        editor.addEventListener('input', function (e) {
+            if (document.getSelection().anchorNode === editor) {
+                document.execCommand('formatBlock', false, 'div');
+            }
+        });
+
+        editor.addEventListener('keydown', function (e) {
+            const isUndo = (e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey;
+            const isRedo = ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) ||
+                           ((e.ctrlKey || e.metaKey) && e.key === 'y');
+
+            if (isUndo || isRedo) {
+                e.preventDefault();
+
+                // Simulate punctuation keyup effect to force state save
+                lastSavedContent = editor.innerHTML;
+                saveEditorState();
+
+                if (isUndo && typeof undo === 'function') {
+                    window.isUndoRedo = true;
+                    const newContent = undo();
+                    if (newContent !== undefined) {
+                        editor.innerHTML = newContent;
+                    }
+                    lastSavedContent = editor.innerHTML;
+                    window.lastContent = lastSavedContent;
+                    window.isUndoRedo = false;
+                }
+
+                if (isRedo && typeof redo === 'function') {
+                    window.isUndoRedo = true;
+                    const newContent = redo();
+                    if (newContent !== undefined) {
+                        editor.innerHTML = newContent;
+                    }
+                    lastSavedContent = editor.innerHTML;
+                    window.lastContent = lastSavedContent;
+                    window.isUndoRedo = false;
+                }
+            }
+        });
+        
+        
+
+        editor.addEventListener('keyup', function (e) {
+            if (window.isUndoRedo) return;
+
+            const isWhitespace = /[\\s]/.test(e.key) ||
+                e.key === ' ' || e.key === 'Space' ||
+                e.key === 'Tab' || e.key === 'Enter';
+
+            const isPunctuation = /[.,!?;:'"(){}\\[\\]\\-_+=|\\\\/@#$%^&*`~<>]/.test(e.key);
+
+            if (isWhitespace || isPunctuation) {
+                lastSavedContent = editor.innerHTML;
+                saveEditorState();
+            }
+        });
+    }
+    """
+######################
+
+
+
+        
 def main():
     app = WebkitWordApp()
     return app.run(sys.argv)
