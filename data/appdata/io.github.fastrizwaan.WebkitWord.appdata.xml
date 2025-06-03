@@ -48,15 +48,15 @@
   <screenshots>
     <screenshot type="default">
       <caption>WebkitWord main editor interface</caption>
-      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/webkitword.png</image>
+      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/webkitword_v0.2.png</image>
     </screenshot>
     <screenshot>
       <caption>Document with images</caption>
-      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux.png</image>
+      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux_v0.2.png</image>
     </screenshot>
     <screenshot>
       <caption>Saving document as PDF</caption>
-      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux-save-as-pdf.png</image>
+      <image>https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux-save-as-pdf_v0.2.png</image>
     </screenshot>
     <screenshot>
       <caption>MHTML file opened with Google Chrome</caption>
@@ -68,6 +68,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.2" date="2025-06-03">
+      <description>
+        <p>Theme: toolbar linked buttons now white.</p>
+      </description>
+    </release>
     <release version="0.1" date="2025-05-05">
       <description>
         <p>Initial release with core editing functionality, including text formatting, tables, lists, and multiple document support.</p>

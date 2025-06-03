@@ -26,7 +26,7 @@ class WebkitWordApp(Adw.Application):
         super().__init__(application_id='io.github.fastrizwaan.WebkitWord',
                         flags=Gio.ApplicationFlags.HANDLES_OPEN,
                         **kwargs)
-        self.version = "v0.2"
+        self.version = "v0.1"
         self.windows = []  # Track all open windows
         self.window_buttons = {}  # Track window menu buttons {window_id: button}
         self.connect('activate', self.on_activate)
@@ -240,13 +240,13 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
 
 .linked button               {background: @theme_bg_color; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 20px rgba(127, 127, 127, 0.18);}
-.linked button:hover         {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:active        {background-color: rgba(127, 127, 127, 0.5); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:checked       {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:checked:hover {background-color: rgba(127, 127, 127, 0.55); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:first-child:hover {background-color: rgba(127, 127, 127, 0.35); }
-.linked button:not(:first-child):not(:last-child):hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:last-child:hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
+.linked button:hover         {background-color: rgba(127, 127, 127, 0.35); }
+.linked button:active        {background-color: rgba(127, 127, 127, 0.35); }
+.linked button:checked       {background-color: rgba(127, 127, 127, 0.35); }
+.linked button:checked:hover {background-color: rgba(127, 127, 127, 0.35); }
+.linked button:first-child:hover {background-color: rgba(127, 127, 127, 0.35);}
+.linked button:not(:first-child):not(:last-child):hover {background-color: rgba(127, 127, 127, 0.35);}
+.linked button:last-child:hover {background-color: rgba(127, 127, 127, 0.35); }
 
 .linked dropdown listview {
         margin: 0px;
@@ -312,34 +312,36 @@ popover.menu {
 
 /* Additional recommended fixes for consistent styling */
 .linked menubutton button {
-    background: @theme_bg_color; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 20px rgba(127, 127, 127, 0.18); margin-right: -1px;
+    background: @theme_bg_color; border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .linked menubutton button:hover {
     background-color: rgba(127, 127, 127, 0.35);
-    border: solid 1px rgba(127, 127, 127, 0.30);
-    margin-right: -1px;
+    border: solid 0px rgba(127, 127, 127, 0.30);
 }
 
 .linked menubutton button:active, 
 .linked menubutton button:checked {
     background-color: rgba(127, 127, 127, 0.35);
-    border: solid 1px rgba(127, 127, 127, 0.00);
+    border: solid 0px rgba(127, 127, 127, 0.50);
 }
 
 .linked menubutton button:checked:hover {
-    background-color: rgba(127, 127, 127, 0.55);
-    border: solid 1px rgba(127, 127, 127, 0.0);
+    background-color: rgba(127, 127, 127, 0.5);
+    border: solid 0px rgba(127, 127, 127, 0.30);
 }
 
+
 .linked splitbutton > menubutton > button.toggle {
-    border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px; padding: 0px 0px 0px 0px; }
+    border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;  }
 .linked splitbutton > button  {
     border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
 .linked splitbutton:first-child > button  {
     border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
-.linked splitbutton:last-child > button  {
+.linked splitbutton:first-child > menubutton > button.toggle   {
     border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
+.linked splitbutton:last-child > button  {
+    border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px; }
 .linked splitbutton:last-child > menubutton > button.toggle   {
     border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;}
 
@@ -426,7 +428,7 @@ popover.menu {
         win.find_button = Gtk.ToggleButton(icon_name="edit-find-replace-symbolic")
         win.find_button.set_tooltip_text("Find and Replace (Ctrl+F)")
         win.find_button_handler_id = win.find_button.connect("toggled", lambda btn: self.on_find_button_toggled(win, btn))
-        win.find_button.set_size_request(40, 36)        
+        win.find_button.set_size_request(38, 34)        
         # --- CENTER TITLE ---
         
         # Set up the window title widget
@@ -3854,7 +3856,7 @@ popover.menu {
         win.bold_button = Gtk.ToggleButton(icon_name="format-text-bold-symbolic")
         win.bold_button.set_tooltip_text("Bold (Ctrl+B)")
         win.bold_button.set_focus_on_click(False)
-        win.bold_button.set_size_request(40, 36)
+        win.bold_button.set_size_request(38, 34)
         win.bold_handler_id = win.bold_button.connect("toggled", lambda btn: self.on_bold_toggled(win, btn))
         bius_group.append(win.bold_button)          
 
@@ -3862,7 +3864,7 @@ popover.menu {
         win.italic_button = Gtk.ToggleButton(icon_name="format-text-italic-symbolic")
         win.italic_button.set_tooltip_text("Italic (Ctrl+I)")
         win.italic_button.set_focus_on_click(False)
-        win.italic_button.set_size_request(40, 36)
+        win.italic_button.set_size_request(38, 34)
         win.italic_handler_id = win.italic_button.connect("toggled", lambda btn: self.on_italic_toggled(win, btn))
         bius_group.append(win.italic_button)
         
@@ -3870,7 +3872,7 @@ popover.menu {
         win.underline_button = Gtk.ToggleButton(icon_name="format-text-underline-symbolic")
         win.underline_button.set_tooltip_text("Underline (Ctrl+U)")
         win.underline_button.set_focus_on_click(False)
-        win.underline_button.set_size_request(40, 36)
+        win.underline_button.set_size_request(38, 34)
         win.underline_handler_id = win.underline_button.connect("toggled", lambda btn: self.on_underline_toggled(win, btn))
         bius_group.append(win.underline_button)
         
@@ -3878,7 +3880,7 @@ popover.menu {
         win.strikeout_button = Gtk.ToggleButton(icon_name="format-text-strikethrough-symbolic")
         win.strikeout_button.set_tooltip_text("Strikeout")
         win.strikeout_button.set_focus_on_click(False)
-        win.strikeout_button.set_size_request(40, 36)
+        win.strikeout_button.set_size_request(38, 34)
         win.strikeout_handler_id = win.strikeout_button.connect("toggled", lambda btn: self.on_strikeout_toggled(win, btn))
         bius_group.append(win.strikeout_button)        
 
@@ -3895,7 +3897,7 @@ popover.menu {
             win.subscript_button = Gtk.ToggleButton(icon_name="format-text-subscript-symbolic")
             win.subscript_button.set_tooltip_text("Subscript")
             win.subscript_button.add_css_class("flat")
-            win.subscript_button.set_size_request(40, 36)
+            win.subscript_button.set_size_request(38, 34)
             win.subscript_handler_id = win.subscript_button.connect("toggled", 
                 lambda btn: self.on_subscript_toggled(win, btn))
             subscript_group.append(win.subscript_button)
@@ -3904,7 +3906,7 @@ popover.menu {
             win.superscript_button = Gtk.ToggleButton(icon_name="format-text-superscript-symbolic")
             win.superscript_button.set_tooltip_text("Superscript")
             win.superscript_button.add_css_class("flat")
-            win.superscript_button.set_size_request(40, 36)
+            win.superscript_button.set_size_request(38, 34)
             win.superscript_handler_id = win.superscript_button.connect("toggled", 
                 lambda btn: self.on_superscript_toggled(win, btn))
             subscript_group.append(win.superscript_button)
@@ -3918,14 +3920,14 @@ popover.menu {
         dropcap_formatting_marks_group.set_margin_end(0)
         win.format_marks_button = Gtk.ToggleButton(icon_name="format-show-marks-symbolic")
         win.format_marks_button.set_tooltip_text("Show Formatting Marks")
-        win.format_marks_button.set_size_request(40, 36)
+        win.format_marks_button.set_size_request(38, 34)
         win.format_marks_button.connect("toggled", lambda btn: self.on_show_formatting_marks_toggled(win, btn))
         dropcap_formatting_marks_group.append(win.format_marks_button)
 
         # Drop cap button
         win.drop_cap_button = Gtk.Button(icon_name="format-drop-cap-symbolic")
         win.drop_cap_button.set_tooltip_text("Drop Cap")
-        win.drop_cap_button.set_size_request(40, 36)
+        win.drop_cap_button.set_size_request(38, 34)
         win.drop_cap_button.connect("clicked", lambda btn: self.on_drop_cap_clicked(win, btn))
         dropcap_formatting_marks_group.append(win.drop_cap_button)
         
@@ -3940,7 +3942,7 @@ popover.menu {
         indent_button = Gtk.Button(icon_name="format-indent-more-symbolic")
         indent_button.set_tooltip_text("Increase Indent")
         indent_button.set_focus_on_click(False)
-        indent_button.set_size_request(40, 36)
+        indent_button.set_size_request(38, 34)
         indent_button.connect("clicked", lambda btn: self.on_indent_clicked(win, btn))
         indent_group.append(indent_button)
         
@@ -3948,7 +3950,7 @@ popover.menu {
         outdent_button = Gtk.Button(icon_name="format-indent-less-symbolic")
         outdent_button.set_tooltip_text("Decrease Indent")
         outdent_button.set_focus_on_click(False)
-        outdent_button.set_size_request(40, 36)
+        outdent_button.set_size_request(38, 34)
         outdent_button.connect("clicked", lambda btn: self.on_outdent_clicked(win, btn))
         indent_group.append(outdent_button)
         
@@ -3963,7 +3965,7 @@ popover.menu {
         
         # Line spacing button menu
         line_spacing_button = Gtk.MenuButton(icon_name="format-line-spacing-symbolic")
-        line_spacing_button.set_size_request(40, 36)
+        line_spacing_button.set_size_request(38, 34)
         line_spacing_button.set_tooltip_text("Line Spacing")
 
         # Create line spacing menu
@@ -3980,7 +3982,7 @@ popover.menu {
         
         # Paragraph spacing button menu
         para_spacing_button = Gtk.MenuButton(icon_name="format-paragraph-spacing-symbolic")
-        para_spacing_button.set_size_request(40, 36)
+        para_spacing_button.set_size_request(38, 34)
         para_spacing_button.set_tooltip_text("Paragraph Spacing")
 
         # Create paragraph spacing menu
@@ -4009,7 +4011,7 @@ popover.menu {
         column_case_group.set_margin_start(0)
         
         column_button = Gtk.MenuButton(icon_name="columns-symbolic")
-        column_button.set_size_request(40, 36)
+        column_button.set_size_request(38, 34)
         column_button.set_tooltip_text("Column Layout")
         
         # Create column menu
@@ -4027,7 +4029,7 @@ popover.menu {
         # Case change menu button
         case_menu_button = Gtk.MenuButton(icon_name="uppercase-symbolic")
         case_menu_button.set_tooltip_text("Change Case")
-        case_menu_button.set_size_request(40, 36)
+        case_menu_button.set_size_request(38, 34)
 
         # Create case change menu
         case_menu = Gio.Menu()
@@ -4054,7 +4056,7 @@ popover.menu {
         win.bullet_list_button = Gtk.ToggleButton(icon_name="view-list-bullet-symbolic")
         win.bullet_list_button.set_tooltip_text("Bullet List")
         win.bullet_list_button.set_focus_on_click(False)
-        win.bullet_list_button.set_size_request(40, 36)
+        win.bullet_list_button.set_size_request(38, 34)
         # Store the handler ID directly on the button
         win.bullet_list_button.handler_id = win.bullet_list_button.connect("toggled", 
             lambda btn: self.on_bullet_list_toggled(win, btn))
@@ -4064,7 +4066,7 @@ popover.menu {
         win.numbered_list_button = Gtk.ToggleButton(icon_name="view-list-ordered-symbolic")
         win.numbered_list_button.set_tooltip_text("Numbered List")
         win.numbered_list_button.set_focus_on_click(False)
-        win.numbered_list_button.set_size_request(40, 36)
+        win.numbered_list_button.set_size_request(38, 34)
         # Store the handler ID directly on the button
         win.numbered_list_button.handler_id = win.numbered_list_button.connect("toggled", 
             lambda btn: self.on_numbered_list_toggled(win, btn))
@@ -4172,7 +4174,7 @@ popover.menu {
         win.font_color_button = Adw.SplitButton()
         win.font_color_button.set_tooltip_text("Text Color")
         win.font_color_button.set_focus_on_click(False)
-        win.font_color_button.set_size_request(40, 36)
+        win.font_color_button.set_size_request(38, 34)
         win.font_color_button.set_child(font_color_box)
         win.font_color_button.set_popover(font_color_popover)
         
@@ -4264,7 +4266,7 @@ popover.menu {
         win.bg_color_button = Adw.SplitButton()
         win.bg_color_button.set_tooltip_text("Background Color")
         win.bg_color_button.set_focus_on_click(False)
-        win.bg_color_button.set_size_request(40, 36)
+        win.bg_color_button.set_size_request(38, 34)
         win.bg_color_button.set_child(bg_color_box)
         win.bg_color_button.set_popover(bg_color_popover)
 
@@ -4677,7 +4679,7 @@ popover.menu {
         align_left_button = Gtk.ToggleButton(icon_name="format-justify-left-symbolic")
         align_left_button.set_tooltip_text("Align Left")
         align_left_button.set_focus_on_click(False)
-        align_left_button.set_size_request(40, 36)
+        align_left_button.set_size_request(38, 34)
         # Store the handler ID when connecting
         align_left_button.handler_id = align_left_button.connect("toggled", 
             lambda btn: self.on_align_left_toggled(win, btn))
@@ -4687,7 +4689,7 @@ popover.menu {
         align_center_button = Gtk.ToggleButton(icon_name="format-justify-center-symbolic")
         align_center_button.set_tooltip_text("Align Center")
         align_center_button.set_focus_on_click(False)
-        align_center_button.set_size_request(40, 36)
+        align_center_button.set_size_request(38, 34)
         # Store the handler ID when connecting
         align_center_button.handler_id = align_center_button.connect("toggled", 
             lambda btn: self.on_align_center_toggled(win, btn))
@@ -4697,7 +4699,7 @@ popover.menu {
         align_right_button = Gtk.ToggleButton(icon_name="format-justify-right-symbolic")
         align_right_button.set_tooltip_text("Align Right")
         align_right_button.set_focus_on_click(False)
-        align_right_button.set_size_request(40, 36)
+        align_right_button.set_size_request(38, 34)
         # Store the handler ID when connecting
         align_right_button.handler_id = align_right_button.connect("toggled", 
             lambda btn: self.on_align_right_toggled(win, btn))
@@ -4707,7 +4709,7 @@ popover.menu {
         align_justify_button = Gtk.ToggleButton(icon_name="format-justify-fill-symbolic")
         align_justify_button.set_tooltip_text("Justify")
         align_justify_button.set_focus_on_click(False)
-        align_justify_button.set_size_request(40, 36)
+        align_justify_button.set_size_request(38, 34)
         # Store the handler ID when connecting
         align_justify_button.handler_id = align_justify_button.connect("toggled", 
             lambda btn: self.on_align_justify_toggled(win, btn))
@@ -4731,7 +4733,7 @@ popover.menu {
         
         # Add a Word Art button to the clear group
         wordart_button = Gtk.Button(icon_name="format-word-art-symbolic")  
-        wordart_button.set_size_request(40, 36)
+        wordart_button.set_size_request(38, 34)
         wordart_button.set_tooltip_text("Insert Word Art")
         wordart_button.connect("clicked", lambda btn: self.on_wordart_clicked(win, btn))
 
@@ -4756,31 +4758,31 @@ popover.menu {
 
         # Insert table button
         table_button = Gtk.Button(icon_name="insert-table-symbolic")  # Use a standard table icon
-        table_button.set_size_request(40, 36)
+        table_button.set_size_request(38, 34)
         table_button.set_tooltip_text("Insert Table")
         table_button.connect("clicked", lambda btn: self.on_insert_table_clicked(win, btn))
 
         # Insert text box button
         text_box_button = Gtk.Button(icon_name="insert-text-symbolic")
-        text_box_button.set_size_request(40, 36)
+        text_box_button.set_size_request(38, 34)
         text_box_button.set_tooltip_text("Insert Text Box")
         text_box_button.connect("clicked", lambda btn: self.on_insert_text_box_clicked(win, btn))        
 
         # Insert image button
         image_button = Gtk.Button(icon_name="insert-image-symbolic")
-        image_button.set_size_request(40, 36)
+        image_button.set_size_request(38, 34)
         image_button.set_tooltip_text("Insert Image")
         image_button.connect("clicked", lambda btn: self.on_insert_image_clicked(win, btn))
 
         # Insert link button
         link_button = Gtk.Button(icon_name="insert-link-symbolic")
-        link_button.set_size_request(40, 36)
+        link_button.set_size_request(38, 34)
         link_button.set_tooltip_text("Insert link")
         link_button.connect("clicked", lambda btn: self.on_insert_link_clicked(win, btn))
 
         # Insert date/time button
         insert_date_time_button = Gtk.Button(icon_name="today-symbolic")
-        insert_date_time_button.set_size_request(40, 36)
+        insert_date_time_button.set_size_request(38, 34)
         insert_date_time_button.set_tooltip_text("Insert Date/Time")
         insert_date_time_button.connect("clicked", lambda btn: self.on_insert_datetime_clicked(win, btn))
      
@@ -4805,7 +4807,7 @@ popover.menu {
         win.rtl_button = Gtk.ToggleButton(icon_name="text-direction-ltr-symbolic")
         win.rtl_button.set_tooltip_text("Toggle Right-to-Left Text Direction")
         win.rtl_button.set_focus_on_click(False)
-        win.rtl_button.set_size_request(40, 36)
+        win.rtl_button.set_size_request(38, 34)
         win.rtl_button.connect("toggled", lambda btn: self.on_rtl_toggled(win, btn))
         direction_group.append(win.rtl_button)
 
@@ -7118,25 +7120,25 @@ popover.menu {
         new_button = Gtk.Button(icon_name="document-new-symbolic")
         new_button.set_tooltip_text("New Document")
         new_button.connect("clicked", lambda btn: self.on_new_clicked(win, btn))
-        new_button.set_size_request(40, 36)
+        new_button.set_size_request(38, 34)
         
         # Open button
         open_button = Gtk.Button(icon_name="document-open-symbolic")
         open_button.set_tooltip_text("Open File")
         open_button.connect("clicked", lambda btn: self.on_open_clicked(win, btn))
-        open_button.set_size_request(40, 36)
+        open_button.set_size_request(38, 34)
         
         # Save button
         save_button = Gtk.Button(icon_name="document-save-symbolic")
         save_button.set_tooltip_text("Save File")
         save_button.connect("clicked", lambda btn: self.on_save_clicked(win, btn))
-        save_button.set_size_request(40, 36)
+        save_button.set_size_request(38, 34)
         
         # Save As button
         save_as_button = Gtk.Button(icon_name="document-save-as-symbolic")
         save_as_button.set_tooltip_text("Save File As")
         save_as_button.connect("clicked", lambda btn: self.on_save_as_clicked(win, btn))
-        save_as_button.set_size_request(40, 36)
+        save_as_button.set_size_request(38, 34)
         
         # Add file operation buttons to the group
         file_group.append(new_button)
@@ -7156,25 +7158,25 @@ popover.menu {
         select_all_button = Gtk.Button(icon_name="edit-select-all-symbolic")
         select_all_button.set_tooltip_text("Select All")
         select_all_button.connect("clicked", lambda btn: self.on_select_all_clicked(win, btn))
-        select_all_button.set_size_request(40, 36)
+        select_all_button.set_size_request(38, 34)
         
         # Cut button
         cut_button = Gtk.Button(icon_name="edit-cut-symbolic")
         cut_button.set_tooltip_text("Cut")
         cut_button.connect("clicked", lambda btn: self.on_cut_clicked(win, btn))
-        cut_button.set_size_request(40, 36)
+        cut_button.set_size_request(38, 34)
         
         # Copy button
         copy_button = Gtk.Button(icon_name="edit-copy-symbolic")
         copy_button.set_tooltip_text("Copy")
         copy_button.connect("clicked", lambda btn: self.on_copy_clicked(win, btn))
-        copy_button.set_size_request(40, 36)
+        copy_button.set_size_request(38, 34)
         
         # Paste button
         paste_button = Gtk.Button(icon_name="edit-paste-symbolic")
         paste_button.set_tooltip_text("Paste")
         paste_button.connect("clicked", lambda btn: self.on_paste_clicked(win, btn))
-        paste_button.set_size_request(40, 36)
+        paste_button.set_size_request(38, 34)
         
         # Add edit operation buttons to the group
         edit_group.append(select_all_button)
@@ -7194,13 +7196,13 @@ popover.menu {
         undo_button = Gtk.Button(icon_name="edit-undo-symbolic")
         undo_button.set_tooltip_text("Undo")
         undo_button.connect("clicked", lambda btn: self.on_undo_clicked(win, btn))
-        undo_button.set_size_request(40, 36)
+        undo_button.set_size_request(38, 34)
         
         # Redo button
         redo_button = Gtk.Button(icon_name="edit-redo-symbolic")
         redo_button.set_tooltip_text("Redo")
         redo_button.connect("clicked", lambda btn: self.on_redo_clicked(win, btn))
-        redo_button.set_size_request(40, 36)
+        redo_button.set_size_request(38, 34)
         
         # Connect to the same undo/redo state as the main buttons
         win.undo_button_toolbar = undo_button
@@ -7222,19 +7224,19 @@ popover.menu {
         page_setup_button = Gtk.Button(icon_name="document-page-setup-symbolic")
         page_setup_button.set_tooltip_text("Page Setup")
         page_setup_button.connect("clicked", lambda btn: self.on_page_setup_clicked(win, btn))
-        page_setup_button.set_size_request(40, 36)      
+        page_setup_button.set_size_request(38, 34)      
           
         # Print button
         print_button = Gtk.Button(icon_name="document-print-symbolic")
         print_button.set_tooltip_text("Print Document")
         print_button.connect("clicked", lambda btn: self.on_print_clicked(win, btn) if hasattr(self, "on_print_clicked") else None)
-        print_button.set_size_request(40, 36)
+        print_button.set_size_request(38, 34)
         
         # Find-Replace button
         find_button = Gtk.ToggleButton(icon_name="edit-find-replace-symbolic")
         find_button.set_tooltip_text("Find and Replace")
         find_button.connect("toggled", lambda btn: self.on_find_button_toggled(win, btn))
-        find_button.set_size_request(40, 36)
+        find_button.set_size_request(38, 34)
         
         # Sync with the main find button
         win.find_button_toolbar = find_button
@@ -7256,7 +7258,7 @@ popover.menu {
         show_html_button = Gtk.Button(icon_name="edit-symbolic")
         show_html_button.set_tooltip_text("Show HTML")
         show_html_button.connect("clicked", lambda btn: self.on_show_html_clicked(win, btn))
-        show_html_button.set_size_request(40, 36)
+        show_html_button.set_size_request(38, 34)
         
         # Add Show HTML button to the HTML group
         html_group.append(show_html_button)

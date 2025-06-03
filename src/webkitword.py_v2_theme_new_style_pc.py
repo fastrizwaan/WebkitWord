@@ -26,7 +26,7 @@ class WebkitWordApp(Adw.Application):
         super().__init__(application_id='io.github.fastrizwaan.WebkitWord',
                         flags=Gio.ApplicationFlags.HANDLES_OPEN,
                         **kwargs)
-        self.version = "v0.2"
+        self.version = "v0.1"
         self.windows = []  # Track all open windows
         self.window_buttons = {}  # Track window menu buttons {window_id: button}
         self.connect('activate', self.on_activate)
@@ -240,13 +240,13 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
 
 .linked button               {background: @theme_bg_color; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 20px rgba(127, 127, 127, 0.18);}
-.linked button:hover         {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:active        {background-color: rgba(127, 127, 127, 0.5); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:checked       {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:checked:hover {background-color: rgba(127, 127, 127, 0.55); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:first-child:hover {background-color: rgba(127, 127, 127, 0.35); }
-.linked button:not(:first-child):not(:last-child):hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:last-child:hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
+.linked button:hover         {background-color: rgba(127, 127, 127, 0.35); }
+.linked button:active        {background-color: rgba(127, 127, 127, 0.35); }
+.linked button:checked       {background-color: rgba(127, 127, 127, 0.35); }
+.linked button:checked:hover {background-color: rgba(127, 127, 127, 0.35); }
+.linked button:first-child:hover {background-color: rgba(127, 127, 127, 0.35);}
+.linked button:not(:first-child):not(:last-child):hover {background-color: rgba(127, 127, 127, 0.35);}
+.linked button:last-child:hover {background-color: rgba(127, 127, 127, 0.35); }
 
 .linked dropdown listview {
         margin: 0px;
@@ -312,34 +312,36 @@ popover.menu {
 
 /* Additional recommended fixes for consistent styling */
 .linked menubutton button {
-    background: @theme_bg_color; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 20px rgba(127, 127, 127, 0.18); margin-right: -1px;
+    background: @theme_bg_color; border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .linked menubutton button:hover {
     background-color: rgba(127, 127, 127, 0.35);
-    border: solid 1px rgba(127, 127, 127, 0.30);
-    margin-right: -1px;
+    border: solid 0px rgba(127, 127, 127, 0.30);
 }
 
 .linked menubutton button:active, 
 .linked menubutton button:checked {
     background-color: rgba(127, 127, 127, 0.35);
-    border: solid 1px rgba(127, 127, 127, 0.00);
+    border: solid 0px rgba(127, 127, 127, 0.50);
 }
 
 .linked menubutton button:checked:hover {
-    background-color: rgba(127, 127, 127, 0.55);
-    border: solid 1px rgba(127, 127, 127, 0.0);
+    background-color: rgba(127, 127, 127, 0.5);
+    border: solid 0px rgba(127, 127, 127, 0.30);
 }
 
+
 .linked splitbutton > menubutton > button.toggle {
-    border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px; padding: 0px 0px 0px 0px; }
+    border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;  padding: 0px 2px 0px 2px; }
 .linked splitbutton > button  {
     border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
 .linked splitbutton:first-child > button  {
     border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
-.linked splitbutton:last-child > button  {
+.linked splitbutton:first-child > menubutton > button.toggle   {
     border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px;}
+.linked splitbutton:last-child > button  {
+    border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px; }
 .linked splitbutton:last-child > menubutton > button.toggle   {
     border-top-left-radius: 0px; border-bottom-left-radius: 0px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;}
 

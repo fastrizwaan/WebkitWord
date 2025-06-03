@@ -22,15 +22,15 @@ WebkitWord is a feature-rich text editor built with GTK4/Libadwaita that provide
 ## Screenshots
 
 ### Main Interface
-![WebkitWord main editor interface](https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/webkitword.png)
+![WebkitWord main editor interface](https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/webkitword_v0.2.png)
 *The main editor interface showing the application in action*
 
 ### Document with Images
-![Document with images](https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux.png)
+![Document with images](https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux_v0.2.png)
 *Example document with embedded images showing rich content capabilities*
 
 ### PDF Export
-![Saving document as PDF](https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux-save-as-pdf.png)
+![Saving document as PDF](https://github.com/fastrizwaan/WineCharm/releases/download/0.99.1/Linux-save-as-pdf_v0.2.png)
 *Demonstration of the PDF export functionality*
 
 ### Cross-Browser Support
