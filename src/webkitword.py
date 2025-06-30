@@ -2349,203 +2349,107 @@ popover.menu {
 
             
     def on_preferences(self, action, param):
-        """Show preferences dialog with enhanced UI visibility options"""
+        """Show preferences dialog using Adw.PreferencesDialog"""
         if not self.windows:
             return
-                
-        # Find the active window instead of just using the first window
-        active_win = None
-        for win in self.windows:
-            if win.is_active():
-                active_win = win
-                break
-        
-        # If no active window found, use the first one as fallback
-        if not active_win:
-            active_win = self.windows[0]
-                
-        # Create dialog
-        dialog = Adw.Dialog.new()
+
+        # Find the active window
+        active_win = next((win for win in self.windows if win.is_active()), self.windows[0])
+
+        # Create preferences dialog
+        dialog = Adw.PreferencesDialog()
         dialog.set_title("Preferences")
-        dialog.set_content_width(450)
-        
-        # Create content
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        content_box.set_margin_top(24)
-        content_box.set_margin_bottom(24)
-        content_box.set_margin_start(24)
-        content_box.set_margin_end(24)
-        
-        # Show/Hide UI elements section
-        ui_header = Gtk.Label()
-        ui_header.set_markup("<b>User Interface</b>")
-        ui_header.set_halign(Gtk.Align.START)
-        ui_header.set_margin_bottom(12)
-        ui_header.set_margin_top(24)
-        content_box.append(ui_header)
-        
-        # Show Headerbar option
-        headerbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        headerbar_box.set_margin_start(12)
-        headerbar_box.set_margin_top(12)
-        
-        headerbar_label = Gtk.Label(label="Show Headerbar:")
-        headerbar_label.set_halign(Gtk.Align.START)
-        headerbar_label.set_hexpand(True)
-        
-        headerbar_switch = Gtk.Switch()
-        headerbar_switch.set_active(active_win.headerbar_revealer.get_reveal_child())
-        headerbar_switch.set_valign(Gtk.Align.CENTER)
-        headerbar_switch.connect("state-set", lambda sw, state: active_win.headerbar_revealer.set_reveal_child(state))
-        
-        headerbar_box.append(headerbar_label)
-        headerbar_box.append(headerbar_switch)
-        content_box.append(headerbar_box)
-        
-        # Show File Toolbar option
-        file_toolbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        file_toolbar_box.set_margin_start(12)
-        file_toolbar_box.set_margin_top(12)
-        
-        file_toolbar_label = Gtk.Label(label="Show File Toolbar:")
-        file_toolbar_label.set_halign(Gtk.Align.START)
-        file_toolbar_label.set_hexpand(True)
-        
-        file_toolbar_switch = Gtk.Switch()
-        file_toolbar_switch.set_active(active_win.file_toolbar_revealer.get_reveal_child())
-        file_toolbar_switch.set_valign(Gtk.Align.CENTER)
-        file_toolbar_switch.connect("state-set", lambda sw, state: active_win.file_toolbar_revealer.set_reveal_child(state))
-        
-        file_toolbar_box.append(file_toolbar_label)
-        file_toolbar_box.append(file_toolbar_switch)
-        content_box.append(file_toolbar_box)
-        
-        # Show Format Toolbar option
-        format_toolbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        format_toolbar_box.set_margin_start(12)
-        format_toolbar_box.set_margin_top(12)
-        
-        format_toolbar_label = Gtk.Label(label="Show Format Toolbar:")
-        format_toolbar_label.set_halign(Gtk.Align.START)
-        format_toolbar_label.set_hexpand(True)
-        
-        format_toolbar_switch = Gtk.Switch()
-        format_toolbar_switch.set_active(active_win.toolbar_revealer.get_reveal_child())
-        format_toolbar_switch.set_valign(Gtk.Align.CENTER)
-        format_toolbar_switch.connect("state-set", lambda sw, state: active_win.toolbar_revealer.set_reveal_child(state))
-        
-        format_toolbar_box.append(format_toolbar_label)
-        format_toolbar_box.append(format_toolbar_switch)
-        content_box.append(format_toolbar_box)
-        
-        # Show Statusbar option
-        statusbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        statusbar_box.set_margin_start(12)
-        statusbar_box.set_margin_top(12)
-        
-        statusbar_label = Gtk.Label(label="Show Statusbar:")
-        statusbar_label.set_halign(Gtk.Align.START)
-        statusbar_label.set_hexpand(True)
-        
-        statusbar_switch = Gtk.Switch()
-        statusbar_switch.set_active(active_win.statusbar_revealer.get_reveal_child())
-        statusbar_switch.set_valign(Gtk.Align.CENTER)
-        statusbar_switch.connect("state-set", lambda sw, state: active_win.statusbar_revealer.set_reveal_child(state))
-        
-        statusbar_box.append(statusbar_label)
-        statusbar_box.append(statusbar_switch)
-        content_box.append(statusbar_box)
-        
-        # Auto-save section
-        auto_save_section = Gtk.Label()
-        auto_save_section.set_markup("<b>Auto Save</b>")
-        auto_save_section.set_halign(Gtk.Align.START)
-        auto_save_section.set_margin_bottom(12)
-        auto_save_section.set_margin_top(24)
-        content_box.append(auto_save_section)
-        
-        auto_save_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        auto_save_box.set_margin_start(12)
-        
-        auto_save_label = Gtk.Label(label="Auto Save:")
-        auto_save_label.set_halign(Gtk.Align.START)
-        auto_save_label.set_hexpand(True)
-        
-        auto_save_switch = Gtk.Switch()
-        auto_save_switch.set_active(active_win.auto_save_enabled)
-        auto_save_switch.set_valign(Gtk.Align.CENTER)
-        
-        auto_save_box.append(auto_save_label)
-        auto_save_box.append(auto_save_switch)
-        content_box.append(auto_save_box)
-        
-        # Interval settings
-        interval_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        interval_box.set_margin_start(12)
-        interval_box.set_margin_top(12)
-        
-        interval_label = Gtk.Label(label="Auto-save Interval (seconds):")
-        interval_label.set_halign(Gtk.Align.START)
-        interval_label.set_hexpand(True)
-        
-        adjustment = Gtk.Adjustment(
-            value=active_win.auto_save_interval,
-            lower=10,
-            upper=600,
-            step_increment=10
-        )
-        
-        spinner = Gtk.SpinButton()
-        spinner.set_adjustment(adjustment)
-        spinner.set_valign(Gtk.Align.CENTER)
-        
-        interval_box.append(interval_label)
-        interval_box.append(spinner)
-        content_box.append(interval_box)
-        
-        # Dialog buttons
-        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        button_box.set_halign(Gtk.Align.END)
-        button_box.set_margin_top(24)
-        
-        cancel_button = Gtk.Button(label="Cancel")
-        cancel_button.connect("clicked", lambda btn: dialog.close())
-        button_box.append(cancel_button)
-        
-        ok_button = Gtk.Button(label="OK")
-        ok_button.add_css_class("suggested-action")
-        ok_button.connect("clicked", lambda btn: self.save_preferences(
-            dialog, active_win, auto_save_switch.get_active(), spinner.get_value_as_int()
-        ))
-        button_box.append(ok_button)
-        
-        content_box.append(button_box)
-        
-        # Important: Store a reference to the dialog in the window
+        dialog.set_size_request(480, 640)
         active_win.preferences_dialog = dialog
-        
-        # Connect to the closed signal to clean up the reference
-        dialog.connect("closed", lambda d: self.on_preferences_dialog_closed(active_win))
-        
-        # Set dialog content and show
-        dialog.set_child(content_box)
+
+        # Create preferences page
+        page = Adw.PreferencesPage()
+        page.set_title("General")
+        page.set_icon_name("preferences-system-symbolic")
+        dialog.add(page)
+
+        # UI Elements group
+        ui_group = Adw.PreferencesGroup()
+        ui_group.set_title("User Interface")
+        ui_group.set_description("Configure interface visibility")
+        page.add(ui_group)
+
+        # Headerbar switch
+        headerbar_row = Adw.SwitchRow()
+        headerbar_row.set_title("Show Headerbar")
+        headerbar_row.set_active(active_win.headerbar_revealer.get_reveal_child())
+        headerbar_row.connect("notify::active", lambda row, _: active_win.headerbar_revealer.set_reveal_child(row.get_active()))
+        ui_group.add(headerbar_row)
+
+        # File Toolbar switch
+        file_toolbar_row = Adw.SwitchRow()
+        file_toolbar_row.set_title("Show File Toolbar")
+        file_toolbar_row.set_active(active_win.file_toolbar_revealer.get_reveal_child())
+        file_toolbar_row.connect("notify::active", lambda row, _: active_win.file_toolbar_revealer.set_reveal_child(row.get_active()))
+        ui_group.add(file_toolbar_row)
+
+        # Format Toolbar switch
+        format_toolbar_row = Adw.SwitchRow()
+        format_toolbar_row.set_title("Show Format Toolbar")
+        format_toolbar_row.set_active(active_win.toolbar_revealer.get_reveal_child())
+        format_toolbar_row.connect("notify::active", lambda row, _: active_win.toolbar_revealer.set_reveal_child(row.get_active()))
+        ui_group.add(format_toolbar_row)
+
+        # Statusbar switch
+        statusbar_row = Adw.SwitchRow()
+        statusbar_row.set_title("Show Statusbar")
+        statusbar_row.set_active(active_win.statusbar_revealer.get_reveal_child())
+        statusbar_row.connect("notify::active", lambda row, _: active_win.statusbar_revealer.set_reveal_child(row.get_active()))
+        ui_group.add(statusbar_row)
+
+        # Auto-save group
+        auto_save_group = Adw.PreferencesGroup()
+        auto_save_group.set_title("Auto Save")
+        auto_save_group.set_description("Configure auto-save settings")
+        page.add(auto_save_group)
+
+        # Auto-save switch
+        auto_save_row = Adw.SwitchRow()
+        auto_save_row.set_title("Auto Save")
+        auto_save_row.set_active(active_win.auto_save_enabled)
+        auto_save_group.add(auto_save_row)
+
+        # Auto-save interval
+        interval_row = Adw.SpinRow.new_with_range(10, 600, 10)  # min=10, max=600, step=10
+        interval_row.set_title("Auto-save Interval (seconds)")
+        interval_row.set_value(active_win.auto_save_interval)  # Set initial value
+        interval_row.set_digits(0)  # Display as integers only
+        auto_save_group.add(interval_row)
+
+        # Save settings on dialog close
+        def on_dialog_closed(dlg):
+            self.save_preferences(
+                dialog,
+                active_win,
+                auto_save_row.get_active(),
+                interval_row.get_value()
+            )
+            if hasattr(active_win, 'preferences_dialog'):
+                active_win.preferences_dialog = None
+            active_win.webview.grab_focus()
+
+        dialog.connect("closed", on_dialog_closed)
         dialog.present(active_win)
-        
+
     def on_preferences_dialog_closed(self, win):
         """Handle preferences dialog closed event"""
-        # Remove the reference to allow proper cleanup
         if hasattr(win, 'preferences_dialog'):
             win.preferences_dialog = None
         win.webview.grab_focus()
-        
+
     def save_preferences(self, dialog, win, auto_save_enabled, auto_save_interval):
         """Save preferences settings"""
         previous_auto_save = win.auto_save_enabled
-        
+
         win.auto_save_enabled = auto_save_enabled
         win.auto_save_interval = auto_save_interval
-        
-        # Update auto-save timer if needed
+
+        # Update auto-save timer
         if auto_save_enabled != previous_auto_save:
             if auto_save_enabled:
                 self.start_auto_save_timer(win)
@@ -2554,19 +2458,17 @@ popover.menu {
                 self.stop_auto_save_timer(win)
                 win.statusbar.set_text("Auto-save disabled")
         elif auto_save_enabled:
-            # Restart timer with new interval
             self.stop_auto_save_timer(win)
             self.start_auto_save_timer(win)
             win.statusbar.set_text(f"Auto-save interval set to {auto_save_interval} seconds")
-        
+
         dialog.close()
 
     def start_auto_save_timer(self, win):
         """Start auto-save timer for a window"""
         if win.auto_save_source_id:
             GLib.source_remove(win.auto_save_source_id)
-            
-        # Set up auto-save timer
+
         win.auto_save_source_id = GLib.timeout_add_seconds(
             win.auto_save_interval,
             lambda: self.auto_save(win)
@@ -2588,7 +2490,7 @@ popover.menu {
                 lambda webview, result, file: self._on_get_html_content_auto_save(win, webview, result, win.current_file),
                 None
             )
-        return win.auto_save_enabled  # Continue timer if enabled
+        return win.auto_save_enabled
 
     def _on_get_html_content_auto_save(self, win, webview, result, file):
         """Handle auto-save content retrieval"""
@@ -2597,9 +2499,9 @@ popover.menu {
             if js_result:
                 editor_content = (js_result.get_js_value().to_string() if hasattr(js_result, 'get_js_value') else
                                 js_result.to_string() if hasattr(js_result, 'to_string') else str(js_result))
-                
-                self.save_html_content(win, editor_content, file, 
-                                      lambda file, result: self._on_auto_save_completed(win, file, result))
+
+                self.save_html_content(win, editor_content, file,
+                                    lambda file, result: self._on_auto_save_completed(win, file, result))
         except Exception as e:
             print(f"Error getting HTML content for auto-save: {e}")
             win.statusbar.set_text(f"Auto-save failed: {e}")
@@ -2609,7 +2511,7 @@ popover.menu {
         try:
             success, _ = file.replace_contents_finish(result)
             if success:
-                win.modified = False  # Reset modified flag after save
+                win.modified = False
                 self.update_window_title(win)
                 win.statusbar.set_text(f"Auto-saved at {GLib.DateTime.new_now_local().format('%H:%M:%S')}")
             else:
