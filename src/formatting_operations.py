@@ -1790,38 +1790,21 @@ def on_clear_formatting_clicked(self, win, button):
     self.execute_js(win, js_code)
     win.statusbar.set_text("Text formatting removed")
     win.webview.grab_focus()
-
 def on_change_case(self, win, case_type):
-    """Change the case of selected text while preserving selection"""
-    # Define JavaScript function for each case type
+    """Change case of selected HTML content, preserving structure and formatting."""
+
     js_transformations = {
         "sentence": """
             function transformText(text) {
                 if (!text) return text;
-                
-                // First convert everything to lowercase
                 text = text.toLowerCase();
-                
-                // Then capitalize the first letter of each sentence
-                // Look for sentence-ending punctuation (., !, ?) followed by space or end of string
-                // Also handle the first character of the entire text
                 return text.replace(/([.!?]\\s+|^)([a-z])/g, function(match, p1, p2) {
                     return p1 + p2.toUpperCase();
-                }).replace(/^[a-z]/, function(firstChar) {
-                    return firstChar.toUpperCase();
                 });
             }
         """,
-        "lower": """
-            function transformText(text) {
-                return text.toLowerCase();
-            }
-        """,
-        "upper": """
-            function transformText(text) {
-                return text.toUpperCase();
-            }
-        """,
+        "lower": "function transformText(text) { return text.toLowerCase(); }",
+        "upper": "function transformText(text) { return text.toUpperCase(); }",
         "title": """
             function transformText(text) {
                 return text.replace(/\\b\\w+/g, function(word) {
@@ -1832,168 +1815,71 @@ def on_change_case(self, win, case_type):
         "toggle": """
             function transformText(text) {
                 return text.split('').map(function(char) {
-                    if (char === char.toUpperCase()) {
-                        return char.toLowerCase();
-                    } else {
-                        return char.toUpperCase();
-                    }
+                    return char === char.toUpperCase() ? char.toLowerCase() : char.toUpperCase();
                 }).join('');
             }
         """,
         "smallcaps": """
             function transformText(text) {
-                // We'll wrap the text in a span with font-variant set to small-caps
-                // This applies the CSS small-caps style to the text
                 return '<span style="font-variant: small-caps;">' + text + '</span>';
             }
         """
     }
-    
-    # Get the transformation function for this case type
+
     transform_function = js_transformations.get(case_type, js_transformations["lower"])
-    
-    # Create the complete JavaScript code
+
     js_code = f"""
     (function() {{
         const selection = window.getSelection();
-        if (selection.rangeCount > 0) {{
-            const range = selection.getRangeAt(0);
-            
-            // Check if there's selected text
-            if (!range.collapsed) {{
-                // Get the selected text content
-                const selectedText = range.toString();
-                const textLength = selectedText.length;
-                
-                // Store information to help us restore selection
-                const editor = document.getElementById('editor');
-                
-                // Transform the text according to the selected case
-                {transform_function}
-                const transformedText = transformText(selectedText);
-                
-                // For smallcaps which returns HTML, use insertHTML instead of insertText
-                if ('{case_type}' === 'smallcaps') {{
-                    document.execCommand('insertHTML', false, transformedText);
+        if (!selection.rangeCount) return;
+        const range = selection.getRangeAt(0);
+        if (range.collapsed) return;
+
+        const editor = document.getElementById('editor');
+        const frag = range.cloneContents();
+        const container = document.createElement("div");
+        container.appendChild(frag);
+        let html = container.innerHTML;
+
+        {transform_function}
+
+        if ('{case_type}' === 'smallcaps') {{
+            html = transformText(html);
+        }} else {{
+            const temp = document.createElement("div");
+            temp.innerHTML = html;
+            function walkTextNodes(node) {{
+                if (node.nodeType === Node.TEXT_NODE) {{
+                    node.textContent = transformText(node.textContent);
                 }} else {{
-                    // Replace the selected text with the transformed text
-                    document.execCommand('insertText', false, transformedText);
-                }}
-                
-                // Now try to restore the selection
-                try {{
-                    // The transformed text has the same length as the original in most cases
-                    // (except title case might change), so we can try to find it
-                    const currentPos = selection.getRangeAt(0).startContainer;
-                    const currentOffset = selection.getRangeAt(0).startOffset;
-                    
-                    // Perform a new selection
-                    const textNodes = [];
-                    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
-                    let node;
-                    while (node = walker.nextNode()) {{
-                        textNodes.push(node);
+                    for (let child of node.childNodes) {{
+                        walkTextNodes(child);
                     }}
-                    
-                    if (textNodes.length > 0) {{
-                        // Find nodes containing our transformed text and select it
-                        let foundStart = false;
-                        let startNode = null, startNodeOffset = 0;
-                        let endNode = null, endNodeOffset = 0;
-                        
-                        // Look for transformed text in nearby nodes
-                        for (const node of textNodes) {{
-                            // Check if this node might contain our text or parts of it
-                            // For case changes, the text might be broken up into multiple nodes
-                            
-                            if (!foundStart) {{
-                                // Look for the start of the transformed text
-                                const startCheck = '{case_type}' === 'smallcaps' 
-                                    ? selectedText.substring(0, Math.min(20, selectedText.length))
-                                    : transformedText.substring(0, Math.min(20, transformedText.length));
-                                if (node.textContent.includes(startCheck)) {{
-                                    startNode = node;
-                                    startNodeOffset = node.textContent.indexOf(startCheck);
-                                    foundStart = true;
-                                    
-                                    // If the entire transformed text fits in this node, we can also set the end
-                                    if (node.textContent.includes('{case_type}' === 'smallcaps' ? selectedText : transformedText)) {{
-                                        endNode = node;
-                                        endNodeOffset = startNodeOffset + ('{case_type}' === 'smallcaps' ? selectedText.length : transformedText.length);
-                                        break;
-                                    }}
-                                }}
-                            }} else if (foundStart) {{
-                                // Already found start, now look for the end
-                                const endCheck = '{case_type}' === 'smallcaps'
-                                    ? selectedText.substring(Math.max(0, selectedText.length - 20))
-                                    : transformedText.substring(Math.max(0, transformedText.length - 20));
-                                if (node.textContent.includes(endCheck)) {{
-                                    endNode = node;
-                                    const endPos = node.textContent.indexOf(endCheck) + endCheck.length;
-                                    endNodeOffset = endPos;
-                                    break;
-                                }}
-                            }}
-                        }}
-                        
-                        // Special handling for small caps - find the span we inserted
-                        if ('{case_type}' === 'smallcaps') {{
-                            const smallCapsSpan = editor.querySelector('span[style*="font-variant: small-caps"]');
-                            if (smallCapsSpan) {{
-                                // Create a range that selects the entire span
-                                const newRange = document.createRange();
-                                newRange.selectNode(smallCapsSpan);
-                                selection.removeAllRanges();
-                                selection.addRange(newRange);
-                            }} else if (startNode && endNode) {{
-                                // Fallback to our normal selection logic
-                                const newRange = document.createRange();
-                                newRange.setStart(startNode, startNodeOffset);
-                                newRange.setEnd(endNode, endNodeOffset);
-                                selection.removeAllRanges();
-                                selection.addRange(newRange);
-                            }}
-                        }} else if (startNode && endNode) {{
-                            // Create and apply the new range for other transformations
-                            const newRange = document.createRange();
-                            newRange.setStart(startNode, startNodeOffset);
-                            newRange.setEnd(endNode, endNodeOffset);
-                            selection.removeAllRanges();
-                            selection.addRange(newRange);
-                        }} else if (startNode) {{
-                            // Only found start node, try to approximate
-                            const newRange = document.createRange();
-                            newRange.setStart(startNode, startNodeOffset);
-                            newRange.setEnd(startNode, startNodeOffset + transformedText.length);
-                            selection.removeAllRanges();
-                            selection.addRange(newRange);
-                        }}
-                    }}
-                }} catch (e) {{
-                    console.error("Error restoring selection:", e);
                 }}
-                
-                // Record undo state
-                saveState();
-                window.lastContent = editor.innerHTML;
-                window.redoStack = [];
-                try {{
-                    window.webkit.messageHandlers.contentChanged.postMessage("changed");
-                }} catch(e) {{
-                    console.log("Could not notify about changes:", e);
-                }}
-                
-                return true;
             }}
+            walkTextNodes(temp);
+            html = temp.innerHTML;
         }}
-        return false;
+
+        range.deleteContents();
+        range.insertNode(document.createRange().createContextualFragment(html));
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        saveState();
+        window.lastContent = editor.innerHTML;
+        window.redoStack = [];
+        try {{
+            window.webkit.messageHandlers.contentChanged.postMessage("changed");
+        }} catch(e) {{
+            console.log("Could not notify about changes:", e);
+        }}
     }})();
     """
-    
+
     self.execute_js(win, js_code)
-    
-    # Update status text based on case type
+
     status_messages = {
         "sentence": "Applied sentence case",
         "lower": "Applied lowercase",
@@ -2002,9 +1888,10 @@ def on_change_case(self, win, case_type):
         "toggle": "Applied tOGGLE cASE",
         "smallcaps": "Applied small caps"
     }
-    
+
     win.statusbar.set_text(status_messages.get(case_type, "Changed text case"))
     win.webview.grab_focus()
+
     
 def on_select_all_clicked(self, win, *args):
     """Handle Ctrl+A shortcut for selecting all content"""
