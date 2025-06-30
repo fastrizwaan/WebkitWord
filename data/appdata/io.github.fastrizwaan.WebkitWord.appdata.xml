@@ -68,6 +68,12 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.3" date="2025-06-30">
+      <description>
+        <p>Bug Fix: Change Case.</p>
+        <p>Feature: Update Settings to use Adw.PreferencesDialog.</p>
+      </description>
+    </release>
     <release version="0.2" date="2025-06-03">
       <description>
         <p>Theme: toolbar linked buttons now white.</p>
