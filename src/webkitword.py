@@ -6647,7 +6647,7 @@ popover.menu {
             import json
             escaped_text = json.dumps(final_text)[1:-1]
             
-            # Apply the Word Art style with a direct approach
+            # Apply the Word Art style with improved selection handling
             js_code = f"""
             (function() {{
                 // Get current selection
@@ -6698,16 +6698,45 @@ popover.menu {
                         wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
                 }}
                 
-                // If there's a selection, replace it
+                // Improved selection handling to preserve WordArt structure
                 if (hasSelection) {{
-                    // First delete the selected content
-                    document.execCommand('delete');
+                    const range = selection.getRangeAt(0);
                     
-                    // Then insert the word art
-                    document.execCommand('insertHTML', false, wordArtHtml);
+                    // Create a temporary element to hold the WordArt
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = wordArtHtml;
+                    const wordArtElement = tempDiv.firstChild;
+                    
+                    // Clear the selection first
+                    range.deleteContents();
+                    
+                    // Insert the WordArt element at the selection point
+                    range.insertNode(wordArtElement);
+                    
+                    // Clear the selection to avoid any remaining selection artifacts
+                    selection.removeAllRanges();
+                    
+                    // Place cursor after the inserted WordArt
+                    const newRange = document.createRange();
+                    newRange.setStartAfter(wordArtElement);
+                    newRange.collapse(true);
+                    selection.addRange(newRange);
+                    
                 }} else {{
-                    // Just insert the word art at cursor position
-                    document.execCommand('insertHTML', false, wordArtHtml);
+                    // Just insert the word art at cursor position using the same method
+                    const range = selection.getRangeAt(0) || document.createRange();
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = wordArtHtml;
+                    const wordArtElement = tempDiv.firstChild;
+                    
+                    range.insertNode(wordArtElement);
+                    
+                    // Place cursor after the inserted WordArt
+                    const newRange = document.createRange();
+                    newRange.setStartAfter(wordArtElement);
+                    newRange.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
                 }}
                 
                 // Add a small script to enhance the editor behavior
@@ -6740,7 +6769,7 @@ popover.menu {
                 
         except Exception as e:
             print(f"Error applying Word Art: {e}")
-            win.statusbar.set_text(f"Error applying Word Art: {e}")        
+            win.statusbar.set_text(f"Error applying Word Art: {e}")    
 
     def on_font_size_change_shortcut(self, win, points_change):
         """Handle font size change via keyboard shortcuts (Ctrl+[ / Ctrl+] or Ctrl+Shift+< / Ctrl+Shift+>)
