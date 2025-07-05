@@ -68,6 +68,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.4" date="2025-07-05">
+      <description>
+        <p>Bug Fix: Word Art to selected text.</p>
+      </description>
+    </release>
     <release version="0.3" date="2025-06-30">
       <description>
         <p>Bug Fix: Change Case.</p>
