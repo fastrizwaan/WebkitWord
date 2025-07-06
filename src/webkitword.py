@@ -26,7 +26,7 @@ class WebkitWordApp(Adw.Application):
         super().__init__(application_id='io.github.fastrizwaan.WebkitWord',
                         flags=Gio.ApplicationFlags.HANDLES_OPEN,
                         **kwargs)
-        self.version = "v0.3"
+        self.version = "v0.4"
         self.windows = []  # Track all open windows
         self.window_buttons = {}  # Track window menu buttons {window_id: button}
         self.connect('activate', self.on_activate)

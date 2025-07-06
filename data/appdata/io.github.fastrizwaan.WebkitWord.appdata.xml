@@ -68,9 +68,10 @@
     </screenshot>
   </screenshots>
   <releases>
-    <release version="0.4" date="2025-07-05">
+    <release version="0.4" date="2025-07-06">
       <description>
         <p>Bug Fix: Word Art to selected text.</p>
+        <p>Toolbar: list and indent buttons merged</p>
       </description>
     </release>
     <release version="0.3" date="2025-06-30">
