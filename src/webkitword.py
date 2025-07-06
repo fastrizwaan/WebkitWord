@@ -3577,11 +3577,10 @@ popover.menu {
         
         # Add all the other toolbar elements
         self.add_subscript_superscript_controls(win)
+        self.add_list_and_indent_controls(win)
         self.add_formatting_marks_controls(win)
-        self.add_indent_controls(win)
         self.add_spacing_controls(win)
         self.add_column_case_controls(win)
-        self.add_list_controls(win)
         self.add_color_controls(win)
         self.add_alignment_controls(win)
         self.add_wordart_clear_controls(win)
@@ -3812,6 +3811,50 @@ popover.menu {
 
         win.toolbars_wrapbox.append(subscript_group) 
 
+    def add_list_and_indent_controls(self, win):
+        """Add indent and outdent controls"""
+        # Create linked button group for list/indent controls
+        
+        list_and_indent_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        win.bullet_list_button = Gtk.ToggleButton(icon_name="view-list-bullet-symbolic")
+        win.bullet_list_button.set_tooltip_text("Bullet List")
+        win.bullet_list_button.set_focus_on_click(False)
+        win.bullet_list_button.set_size_request(40, 36)
+        # Store the handler ID directly on the button
+        win.bullet_list_button.handler_id = win.bullet_list_button.connect("toggled", 
+            lambda btn: self.on_bullet_list_toggled(win, btn))
+        list_and_indent_group.append(win.bullet_list_button)
+
+        # Numbered List button
+        win.numbered_list_button = Gtk.ToggleButton(icon_name="view-list-ordered-symbolic")
+        win.numbered_list_button.set_tooltip_text("Numbered List")
+        win.numbered_list_button.set_focus_on_click(False)
+        win.numbered_list_button.set_size_request(40, 36)
+
+        # Store the handler ID directly on the button
+        win.numbered_list_button.handler_id = win.numbered_list_button.connect("toggled", 
+            lambda btn: self.on_numbered_list_toggled(win, btn))
+        list_and_indent_group.append(win.numbered_list_button)
+
+        # Indent button
+        indent_button = Gtk.Button(icon_name="format-indent-more-symbolic")
+        indent_button.set_tooltip_text("Increase Indent")
+        indent_button.set_focus_on_click(False)
+        indent_button.set_size_request(40, 36)
+        indent_button.connect("clicked", lambda btn: self.on_indent_clicked(win, btn))
+        list_and_indent_group.append(indent_button)
+        
+        # Outdent button
+        outdent_button = Gtk.Button(icon_name="format-indent-less-symbolic")
+        outdent_button.set_tooltip_text("Decrease Indent")
+        outdent_button.set_focus_on_click(False)
+        outdent_button.set_size_request(40, 36)
+        outdent_button.connect("clicked", lambda btn: self.on_outdent_clicked(win, btn))
+        list_and_indent_group.append(outdent_button)
+        win.toolbars_wrapbox.append(list_and_indent_group)
+
+
+
     def add_formatting_marks_controls(self, win):
         """Add drop cap and formatting marks controls"""
         dropcap_formatting_marks_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
@@ -3831,29 +3874,6 @@ popover.menu {
         dropcap_formatting_marks_group.append(win.drop_cap_button)
         
         win.toolbars_wrapbox.append(dropcap_formatting_marks_group)
-
-    def add_indent_controls(self, win):
-        """Add indent and outdent controls"""
-        # Create linked button group for list/indent controls
-        indent_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        
-        # Indent button
-        indent_button = Gtk.Button(icon_name="format-indent-more-symbolic")
-        indent_button.set_tooltip_text("Increase Indent")
-        indent_button.set_focus_on_click(False)
-        indent_button.set_size_request(40, 36)
-        indent_button.connect("clicked", lambda btn: self.on_indent_clicked(win, btn))
-        indent_group.append(indent_button)
-        
-        # Outdent button
-        outdent_button = Gtk.Button(icon_name="format-indent-less-symbolic")
-        outdent_button.set_tooltip_text("Decrease Indent")
-        outdent_button.set_focus_on_click(False)
-        outdent_button.set_size_request(40, 36)
-        outdent_button.connect("clicked", lambda btn: self.on_outdent_clicked(win, btn))
-        indent_group.append(outdent_button)
-        
-        win.toolbars_wrapbox.append(indent_group)
 
     def add_spacing_controls(self, win):
         """Add line spacing and paragraph spacing controls"""
@@ -3948,30 +3968,6 @@ popover.menu {
         
         # Add spacing group to toolbar
         win.toolbars_wrapbox.append(column_case_group)
-
-    def add_list_controls(self, win):
-        """Add bullet and numbered list controls"""
-        list_group = Gtk.Box(css_classes=["linked"], orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        win.bullet_list_button = Gtk.ToggleButton(icon_name="view-list-bullet-symbolic")
-        win.bullet_list_button.set_tooltip_text("Bullet List")
-        win.bullet_list_button.set_focus_on_click(False)
-        win.bullet_list_button.set_size_request(40, 36)
-        # Store the handler ID directly on the button
-        win.bullet_list_button.handler_id = win.bullet_list_button.connect("toggled", 
-            lambda btn: self.on_bullet_list_toggled(win, btn))
-        list_group.append(win.bullet_list_button)
-
-        # Numbered List button
-        win.numbered_list_button = Gtk.ToggleButton(icon_name="view-list-ordered-symbolic")
-        win.numbered_list_button.set_tooltip_text("Numbered List")
-        win.numbered_list_button.set_focus_on_click(False)
-        win.numbered_list_button.set_size_request(40, 36)
-        # Store the handler ID directly on the button
-        win.numbered_list_button.handler_id = win.numbered_list_button.connect("toggled", 
-            lambda btn: self.on_numbered_list_toggled(win, btn))
-        list_group.append(win.numbered_list_button)
-
-        win.toolbars_wrapbox.append(list_group)
 
     def add_color_controls(self, win):
         """Add text color and background color controls"""
