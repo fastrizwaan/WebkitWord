@@ -931,7 +931,6 @@ popover.menu {
         {self.table_z_index_js()}
         {self.insert_link_js()}
         {self.rtl_toggle_js()}
-        {self.wordart_js()}  // Add the Word Art JavaScript
         {self.init_editor_js()}
         """
 
@@ -6662,7 +6661,7 @@ popover.menu {
                         wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; text-shadow: 4px 4px 8px rgba(0,0,0,0.5); font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
                         break;
                     case 'outline':
-                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
+                        wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 0px;"><span style="display: inline-block; color: white; text-shadow: 0px 0px 1px black, 0px 0px 1px black, 0px 0px 1px black,  0px 0px 1px black; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
                         break;
                     case 'inset':
                         wordArtHtml = '<span class="wordart-container" style="display: inline-block; position: relative; white-space: wrap; padding: 0 2px;"><span style="display: inline-block; background-color: #666; color: transparent; text-shadow: 2px 2px 3px rgba(255,255,255,0.5); -webkit-background-clip: text; background-clip: text; font-weight: bold; font-size: 24px; position: relative;">{escaped_text}</span></span>';
