@@ -1628,7 +1628,7 @@ def show_page_setup_dialog(self, win, file):
     dialog.set_child(content_box)
     dialog.present(win)                 
 
-def _generate_pdf_with_settings(self, win, file, paper_size_name, orientation, 
+def _generate_pdf_with_sexttings(self, win, file, paper_size_name, orientation, 
                                top_margin, right_margin, bottom_margin, left_margin):
     """Generate PDF with specified page settings"""
     # Show a loading dialog since PDF conversion can take time
@@ -2034,3 +2034,60 @@ def _handle_system_save_dialog_response(self, dialog, result, win):
         # Handle errors (e.g., user cancelled)
         if not error.matches(Gtk.DialogError.quark(), Gtk.DialogError.DISMISSED):
             self.show_error_dialog(win, "Error saving file", str(error))    
+##############################
+def _generate_pdf_with_settings(self, win, file, paper_size_name, orientation, 
+                               top_margin, right_margin, bottom_margin, left_margin):
+    """Generate PDF using LibreOffice conversion"""
+    if not LIBREOFFICE_AVAILABLE:
+        win.statusbar.set_text("LibreOffice not available for PDF export")
+        return False
+
+    loading_dialog = self.show_loading_dialog(win, "Saving document as PDF...")
+
+    try:
+        # Get HTML content from editor
+        win.webview.evaluate_javascript(
+            "document.getElementById('editor').innerHTML",
+            -1, None, None, None,
+            lambda webview, result: self._on_get_html_for_pdf(win, webview, result, file, loading_dialog),
+            None
+        )
+        return True
+    except Exception as e:
+        if loading_dialog:
+            loading_dialog.close()
+        win.statusbar.set_text(f"Error preparing PDF: {e}")
+        return False
+        
+def _on_get_html_for_pdf(self, win, webview, result, file, loading_dialog):
+    try:
+        js_result = webview.evaluate_javascript_finish(result)
+        if js_result:
+            editor_content = js_result.get_js_value().to_string() if hasattr(js_result, 'get_js_value') else js_result.to_string()
+            
+            html_content = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head><body>{editor_content}</body></html>"""
+
+            with tempfile.NamedTemporaryFile(suffix='.html', delete=False) as temp_html:
+                temp_html.write(html_content.encode('utf-8'))
+                temp_html_path = temp_html.name
+
+            pdf_path, _ = convert_with_libreoffice(self, temp_html_path, "pdf")
+            if pdf_path:
+                shutil.copy(pdf_path, file.get_path())
+                shutil.rmtree(os.path.dirname(pdf_path))
+                win.current_file = file
+                win.modified = False
+                self.update_window_title(win)
+                win.statusbar.set_text(f"PDF saved: {file.get_path()}")
+            else:
+                win.statusbar.set_text("PDF conversion failed")
+            
+            os.unlink(temp_html_path)
+        else:
+            win.statusbar.set_text("Failed to get content for PDF")
+    except Exception as e:
+        win.statusbar.set_text(f"Error generating PDF: {e}")
+    finally:
+        if loading_dialog:
+            loading_dialog.close()        

@@ -69,7 +69,7 @@ class WebkitWordApp(Adw.Application):
             # Save as PDF
             'save_as_pdf', '_save_pdf_step1', '_save_pdf_step2', '_pdf_save_success',
             '_pdf_save_cleanup', '_cleanup_temp_dir', 'set_secondary_text',
-            'show_page_setup_dialog', '_generate_pdf_with_settings', 
+            'show_page_setup_dialog', '_generate_pdf_with_settings', '_on_get_html_for_pdf',
             '_on_pdf_print_finished', '_on_pdf_print_failed',
             # Callback handlers
             'save_html_callback', 'save_text_callback',
