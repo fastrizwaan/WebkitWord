@@ -67,7 +67,7 @@ check_python_dependencies() {
         done
         echo ""
         echo "You can install them using pip:"
-        echo "  pip3 install ${ aku_modules[*]}"
+        echo "  pip3 install ${missing_modules[*]}"
         echo "Or on Fedora:"
         echo "  sudo dnf install python3-gobject"
         return 1
