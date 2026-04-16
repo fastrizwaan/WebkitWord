@@ -239,10 +239,10 @@ dropdown.flat:hover { background: rgba(127, 127, 127, 0.25); }
 
 
 
-.linked button               {background: @theme_bg_color; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 20px rgba(127, 127, 127, 0.18);}
+.linked button               {background: @theme_bg_color; border: 1px solid rgba(127, 127, 127, 0.28); box-shadow: 0 4px 20px rgba(127, 127, 127, 0.18);}
 .linked button:hover         {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
 .linked button:active        {background-color: rgba(127, 127, 127, 0.5); border: solid 1px rgba(127, 127, 127, 0.00);}
-.linked button:checked       {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
+.linked button:checked       {background-color: rgba(127, 127, 127, 0.28); border: solid 1px rgba(127, 127, 127, 0.00);}
 .linked button:checked:hover {background-color: rgba(127, 127, 127, 0.55); border: solid 1px rgba(127, 127, 127, 0.00);}
 .linked button:first-child:hover {background-color: rgba(127, 127, 127, 0.35); }
 .linked button:not(:first-child):not(:last-child):hover {background-color: rgba(127, 127, 127, 0.35); border: solid 1px rgba(127, 127, 127, 0.00);}
@@ -312,7 +312,7 @@ popover.menu {
 
 /* Additional recommended fixes for consistent styling */
 .linked menubutton button {
-    background: @theme_bg_color; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 20px rgba(127, 127, 127, 0.18); margin-right: -1px;
+    background: @theme_bg_color; border: 1px solid rgba(127, 127, 127, 0.3); box-shadow: 0 4px 20px rgba(127, 127, 127, 0.18); margin-right: -1px;
 }
 
 .linked menubutton button:hover {
@@ -323,8 +323,8 @@ popover.menu {
 
 .linked menubutton button:active, 
 .linked menubutton button:checked {
-    background-color: rgba(127, 127, 127, 0.35);
-    border: solid 1px rgba(127, 127, 127, 0.00);
+    background-color: rgba(127, 127, 127, 0.15);
+    border: solid 1px rgba(127, 127, 127, 0.3);
 }
 
 .linked menubutton button:checked:hover {
